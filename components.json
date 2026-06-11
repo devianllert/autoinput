@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-mira",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/renderer/src/shared/styles/global.css",
+    "baseColor": "mist",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/renderer/src/shared/components",
+    "utils": "@/renderer/src/shared/lib",
+    "ui": "@/renderer/src/shared/components/ui",
+    "lib": "@/renderer/src/shared/lib",
+    "hooks": "@/renderer/src/shared/hooks"
+  },
+  "iconLibrary": "lucide"
+}

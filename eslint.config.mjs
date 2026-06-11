@@ -42,7 +42,11 @@ export default defineConfig(
   {
     files: ['**/*.{ts,tsx}'],
     rules: {
+      'react-refresh/only-export-components': 'off',
+      'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-misused-promises': [
         'error',
         {
@@ -56,7 +60,7 @@ export default defineConfig(
         },
       ],
       '@typescript-eslint/restrict-template-expressions': [
-        'error',
+        'warn',
         {
           allowNumber: true,
         },

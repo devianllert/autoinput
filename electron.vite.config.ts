@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'electron-vite';
 
@@ -40,6 +41,6 @@ export default defineConfig({
         '@/shared': resolve('src/shared'),
       },
     },
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
   },
 });
