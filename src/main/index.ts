@@ -1,6 +1,8 @@
+import { registerIpcMain } from '@egoist/tipc/main';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 
+import { router } from './ipc/actions';
 import { createMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
@@ -33,8 +35,7 @@ const bootstrap = async () => {
     }
   });
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'));
+  registerIpcMain(router);
 
   createMainWindow();
 };
