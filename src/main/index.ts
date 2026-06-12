@@ -2,6 +2,7 @@ import { registerIpcMain } from '@egoist/tipc/main';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { app, BrowserWindow } from 'electron';
 
+import { registerHotkeys } from './hotkeys/hotkeys';
 import { router } from './ipc/actions';
 import { createMainWindow } from './windows/main';
 
@@ -36,8 +37,9 @@ const bootstrap = async () => {
   });
 
   registerIpcMain(router);
-
   createMainWindow();
+
+  registerHotkeys();
 };
 
 void bootstrap();
