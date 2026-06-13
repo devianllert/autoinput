@@ -17,7 +17,7 @@ export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode =>
       <div className="bg-card flex h-9 w-full px-2 py-1 pr-1 [app-region:drag]">
         <div className="flex h-full w-full items-center">
           <div className="flex items-center">
-            <h1 className="text-sm font-bold">Autoclicker</h1>
+            <h1 className="text-sm font-bold">AutoClicker</h1>
           </div>
 
           <div className="ml-auto flex items-center gap-1 [app-region:no-drag]">
