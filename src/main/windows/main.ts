@@ -8,10 +8,9 @@ export const createMainWindow = (): BrowserWindow => {
   mainWindow = createWindow({
     path: '/',
     title: 'autoclicker',
-    width: 800,
+    width: 560,
     height: 570,
-    minWidth: 800,
-    minHeight: 570,
+    minWidth: 360,
     frame: false,
     fullscreenable: false,
     resizable: true,
