@@ -9,6 +9,7 @@ interface UseKeyboardListenerProps {
 export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
   const [isListening, setIsListening] = useState(false);
   const [pressedKeys, setPressedKeys] = useState<number[]>([]);
+  const [recordedKeys, setRecordedKeys] = useState<number[] | null>(null);
   const onRecordRef = useRef(onRecord);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
       setPressedKeys([]);
 
       if (keys.length > 0) {
+        setRecordedKeys(keys);
         onRecordRef.current(keys);
       }
     };
@@ -87,5 +89,6 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
     stop,
     isListening,
     pressedKeys,
+    recordedKeys,
   };
 };
