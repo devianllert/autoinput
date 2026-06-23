@@ -1,5 +1,6 @@
 import { Conf } from 'electron-conf';
 
+import { clampCps } from '@/shared/clicker/limits';
 import { qKeys } from '@/shared/hotkeys/keys';
 
 import { ClickerConfig, ClickerTimingConfig } from './types';
@@ -35,9 +36,9 @@ export const updateClickerConfig = (config: ClickerConfig): void => {
 export const getClickerTiming = (): ClickerTimingConfig => {
   const timing = ClickerStore.get('timing', defaultClickerTiming);
 
-  return { cps: timing.cps };
+  return { cps: clampCps(timing.cps) };
 };
 
 export const updateClickerTiming = (timing: ClickerTimingConfig): void => {
-  ClickerStore.set('timing', { cps: timing.cps });
+  ClickerStore.set('timing', { cps: clampCps(timing.cps) });
 };

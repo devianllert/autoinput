@@ -1,9 +1,13 @@
 import { Minus, X } from 'lucide-react';
 
+import { useClickerRunning } from '@/renderer/shared/hooks/use-clicker-running';
+import { cn } from '@/renderer/shared/lib/cn';
+
 import { ipcActions } from '../shared/api/ipc-client';
 import { Button } from '../shared/ui/button';
 
 export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode => {
+  const isClickerRunning = useClickerRunning();
   const handleMinimize = () => {
     void ipcActions.minimize();
   };
@@ -16,7 +20,13 @@ export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode =>
     <div className="flex h-screen w-screen flex-col">
       <div className="bg-card flex h-9 w-full px-2 py-1 pr-1 [app-region:drag]">
         <div className="flex h-full w-full items-center">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                'size-2 rounded-full transition-colors',
+                isClickerRunning ? 'bg-green-500' : 'bg-muted',
+              )}
+            />
             <h1 className="text-sm font-bold">AutoClicker</h1>
           </div>
 

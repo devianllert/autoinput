@@ -6,7 +6,7 @@ import {
 } from 'uiohook-napi';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import { getKeyFromCode, qHotkeys, qKeys } from './hotkeys';
+import { getKeyFromCode, Hotkeys, qKeys } from '../hotkeys';
 
 type HookEvent = 'keydown' | 'keyup' | 'mousedown' | 'mouseup' | 'wheel';
 type HookPayload = UiohookKeyboardEvent | UiohookMouseEvent | UiohookWheelEvent;
@@ -78,9 +78,9 @@ describe('getKeyFromCode', () => {
   });
 });
 
-describe('qHotkeys', () => {
+describe('Hotkeys', () => {
   it('registers and removes uIOhook listeners when started and stopped', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
 
     hotkeys.run();
 
@@ -103,7 +103,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs an action when a mouse button hotkey matches exactly', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.MouseButton4], onPress: action });
@@ -120,7 +120,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs an action for keyboard and mouse button combinations', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.Ctrl, qKeys.MouseButton5], onPress: action });
@@ -133,7 +133,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs onRelease in hold mode when a mouse button is released', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -157,7 +157,7 @@ describe('qHotkeys', () => {
   });
 
   it('ignores mouse buttons outside the supported 1-5 range', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.MouseButton1], onPress: action });
@@ -170,7 +170,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs an action only when the pressed keys exactly match the registered hotkey', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.Ctrl, qKeys.A], onPress: action });
@@ -190,7 +190,7 @@ describe('qHotkeys', () => {
   });
 
   it('can register a test hotkey that logs ping', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     try {
@@ -215,7 +215,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs onPress and onRelease in hold mode', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -240,7 +240,7 @@ describe('qHotkeys', () => {
   });
 
   it('ignores synthetic key presses while a hold hotkey is active', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
     const otherAction = vi.fn();
@@ -275,7 +275,7 @@ describe('qHotkeys', () => {
   });
 
   it('does not call onPress again while a hold hotkey stays active', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -295,7 +295,7 @@ describe('qHotkeys', () => {
   });
 
   it('toggles on and off with onPress and onRelease', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -321,7 +321,7 @@ describe('qHotkeys', () => {
   });
 
   it('can toggle again while automation keys are being pressed', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -353,7 +353,7 @@ describe('qHotkeys', () => {
   });
 
   it('does not use onRelease in press mode', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const onPress = vi.fn();
     const onRelease = vi.fn();
 
@@ -373,7 +373,7 @@ describe('qHotkeys', () => {
   });
 
   it('ignores repeated keydown events until the key is released', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.A], onPress: action });
@@ -391,7 +391,7 @@ describe('qHotkeys', () => {
   });
 
   it('unregisters keyboard hotkeys by key set regardless of order', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const action = vi.fn();
 
     hotkeys.register({ keys: [qKeys.Ctrl, qKeys.A], onPress: action });
@@ -405,7 +405,7 @@ describe('qHotkeys', () => {
   });
 
   it('clears keyboard hotkeys without clearing scroll hotkeys by default', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const keyAction = vi.fn();
     const scrollUpAction = vi.fn();
     const scrollDownAction = vi.fn();
@@ -424,7 +424,7 @@ describe('qHotkeys', () => {
   });
 
   it('runs scroll actions for matching hotkeys and wheel direction', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const scrollUpAction = vi.fn();
     const scrollDownAction = vi.fn();
 
@@ -445,7 +445,7 @@ describe('qHotkeys', () => {
   });
 
   it('can unregister individual scroll hotkeys and clear all scroll hotkeys', () => {
-    const hotkeys = new qHotkeys();
+    const hotkeys = new Hotkeys();
     const firstUpAction = vi.fn();
     const firstDownAction = vi.fn();
     const secondUpAction = vi.fn();

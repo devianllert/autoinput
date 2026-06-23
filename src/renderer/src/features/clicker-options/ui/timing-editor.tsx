@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDownIcon, InfoIcon } from 'lucide-react';
 
 import { ClickerTimingConfig } from '@/main/clicker/types';
+import { clampCps, MAX_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
 import { ipcActions } from '@/renderer/shared/api/ipc-client';
 import {
   DropdownMenu,
@@ -51,9 +52,8 @@ export const TimingEditor = () => {
     const display = Number(e.target.value);
 
     const cps = displayToCps(display, rateUnit);
-    const clampedCps = Math.max(1, Math.min(cps, 500));
 
-    updateTimingMutation.mutate({ cps: clampedCps });
+    updateTimingMutation.mutate({ cps: clampCps(cps) });
   };
 
   const handleRateUnitChange = (unit: TimingUnit) => {
@@ -73,7 +73,10 @@ export const TimingEditor = () => {
           </TooltipTrigger>
           <TooltipContent>
             <div>
-              <p>The number of clicks per second, minute, or hour.</p>
+              <p>
+                The number of clicks per second, minute, or hour. Capped at {MAX_CLICKS_PER_SECOND}{' '}
+                clicks/s — the practical Windows limit.
+              </p>
             </div>
           </TooltipContent>
         </Tooltip>

@@ -1,3 +1,5 @@
+import { getClickerTiming } from '../clicker/store';
+import { autoClicker } from '../clicker/worker-runner';
 import { HotkeyRegistration, qKeys } from '../lib/hotkeys/hotkeys';
 
 export type Hotkey = HotkeyRegistration & {
@@ -10,14 +12,14 @@ export const defaultHotkeyList = [
   {
     name: 'test' as const,
     keys: [qKeys.Ctrl, qKeys.Shift, qKeys.P],
-    onPress: () => console.log('ping'),
+    onPress: () => console.log('test'),
     mode: 'press',
   },
   {
     name: 'clicker-start' as const,
     keys: [qKeys.Alt, qKeys.E],
-    onPress: () => console.log('clicker start'),
-    onRelease: () => console.log('clicker stop'),
+    onPress: () => autoClicker.start(getClickerTiming().cps),
+    onRelease: () => autoClicker.stop(),
     mode: 'hold',
   },
 ] satisfies Hotkey[];
