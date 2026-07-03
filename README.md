@@ -1,10 +1,12 @@
 # autoclicker
 
-An Electron application with React and TypeScript
+Automation tool that lets you automate mouse clicks and keyboard keys.
 
-## Recommended IDE Setup
+## Why cps is lower with more keys
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+CPS is how many times per second the app repeats the selected action. One key or mouse button is a single press and release; a combo like `Ctrl + Shift + A` needs several presses and releases per repeat.
+
+More keys means more work per repeat, so the maximum achievable CPS usually drops. This also depends on Windows and the app receiving the input. CPS counts full combo repeats per second, not individual key presses — `500 CPS` with one key is easier to reach than with many keys.
 
 ## Project Setup
 

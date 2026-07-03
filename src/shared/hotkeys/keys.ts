@@ -133,6 +133,13 @@ export const qKeys = {
   MouseButton5: 0xff00 | 5,
 } as const;
 
+export const MOUSE_BUTTON_MASK = 0xff00;
+
+export const isMouseButtonCode = (code: number): boolean =>
+  (code & MOUSE_BUTTON_MASK) === MOUSE_BUTTON_MASK;
+
+export const isKnownKeyCode = (code: number): boolean => Object.values(qKeys).includes(code);
+
 const MODIFIER_CODES = new Set<number>([
   qKeys.Ctrl,
   qKeys.CtrlRight,
@@ -194,17 +201,20 @@ const getDisplayName = (code: number): string => {
   return overrides[name] ?? name;
 };
 
-/** Formats uiohook key codes as a human-readable shortcut, e.g. `Ctrl+Shift+P`. */
-export const formatHotkeyKeys = (codes: number[]): string => {
+/** Sorts uiohook key codes with modifiers first, in a stable display order. */
+export const sortInputKeys = (codes: number[]): number[] => {
   const modifiers = codes.filter((code) => MODIFIER_CODES.has(code));
   const others = codes.filter((code) => !MODIFIER_CODES.has(code));
 
-  const sorted = [
+  return [
     ...modifiers.toSorted(
       (a, b) => (MODIFIER_SORT_ORDER.get(a) ?? 99) - (MODIFIER_SORT_ORDER.get(b) ?? 99),
     ),
     ...others,
   ];
+};
 
-  return sorted.map(getDisplayName).join('+');
+/** Formats uiohook key codes as a human-readable shortcut, e.g. `Ctrl+Shift+P`. */
+export const formatHotkeyKeys = (codes: number[]): string => {
+  return sortInputKeys(codes).map(getDisplayName).join('+');
 };

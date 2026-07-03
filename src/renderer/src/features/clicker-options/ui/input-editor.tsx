@@ -9,60 +9,61 @@ import { Separator } from '@/renderer/shared/ui/separator';
 import { Toggle } from '@/renderer/shared/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
 
-import { recordedInputCodesToUiohookCodes } from '@/shared/hotkeys/dom';
+import { isSupportedClickerInputCode } from '@/shared/clicker/input';
+import type { ClickerConfig } from '@/shared/clicker/types';
+import { recordedInputCodesToUiohookCodes, type RecordedInputCode } from '@/shared/hotkeys/dom';
 import { formatHotkeyKeys } from '@/shared/hotkeys/keys';
 
 import { useKeyboardListener } from '../model/useKeyboardListener';
 
-export const HotkeyEditor = () => {
+const recordedCodesToClickerKeys = (codes: RecordedInputCode[]): number[] =>
+  recordedInputCodesToUiohookCodes(codes).filter((code) => isSupportedClickerInputCode(code));
+
+export const InputEditor = () => {
   const queryClient = useQueryClient();
 
-  const { data: startHotkey } = useQuery({
-    queryKey: ['hotkeys', 'clicker-toggle'],
-    queryFn: () => ipcActions.getHotkeys(),
-    select: (data) => data.find((hotkey) => hotkey.name === 'clicker-start'),
+  const { data: config } = useQuery({
+    queryKey: ['clicker-config'],
+    queryFn: () => ipcActions.getClickerConfig(),
   });
 
-  const updateHotkeyMutation = useMutation({
-    mutationFn: (update: { keys?: number[]; mode?: 'toggle' | 'hold' }) => {
-      if (!startHotkey) {
-        throw new Error('Hotkey not found');
+  const updateConfigMutation = useMutation({
+    mutationFn: (update: Partial<ClickerConfig>) => {
+      if (!config) {
+        throw new Error('Clicker config not loaded');
       }
 
-      return ipcActions.updateHotkey({
-        name: startHotkey.name,
-        keys: update.keys ?? startHotkey.keys,
-        mode: update.mode ?? startHotkey.mode,
+      return ipcActions.updateClickerConfig({
+        keys: update.keys ?? config.keys,
+        mode: update.mode ?? config.mode,
       });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['hotkeys'] });
+      void queryClient.invalidateQueries({ queryKey: ['clicker-config'] });
     },
   });
 
   const { listen, stop, isListening, pressedKeys } = useKeyboardListener({
     onRecord: (recordedCodes) => {
-      const keys = recordedInputCodesToUiohookCodes(recordedCodes);
+      const keys = recordedCodesToClickerKeys(recordedCodes);
 
       if (keys.length === 0) {
         return;
       }
 
-      updateHotkeyMutation.mutate({ keys });
+      updateConfigMutation.mutate({ keys });
     },
   });
 
-  const handleModeChange = (mode: 'toggle' | 'hold') => {
-    updateHotkeyMutation.mutate({ mode });
+  const handleModeChange = (mode: ClickerConfig['mode']) => {
+    updateConfigMutation.mutate({ mode });
   };
 
-  const isModeDisabled = !startHotkey || updateHotkeyMutation.isPending;
+  const isModeDisabled = !config || updateConfigMutation.isPending;
 
-  const currentKeys = isListening
-    ? recordedInputCodesToUiohookCodes(pressedKeys)
-    : (startHotkey?.keys ?? []);
-  const hotkeyLabel =
-    isListening && currentKeys.length === 0 ? 'Press shortcut…' : formatHotkeyKeys(currentKeys);
+  const currentKeys = isListening ? recordedCodesToClickerKeys(pressedKeys) : (config?.keys ?? []);
+  const inputLabel =
+    isListening && currentKeys.length === 0 ? 'Press keys…' : formatHotkeyKeys(currentKeys);
 
   return (
     <div className="bg-card flex w-full flex-col gap-2 rounded-lg p-2">
@@ -73,28 +74,27 @@ export const HotkeyEditor = () => {
           </TooltipTrigger>
           <TooltipContent>
             <div>
-              <p>The hotkey that will toggle the clicker.</p>
+              <p>The button or key combination the clicker will press.</p>
 
               <Separator className="my-2" />
 
               <p>
-                <span className="font-bold">Toggle</span> - Press the hotkey to turn on and then
-                off.
+                <span className="font-bold">Press</span> - tap the input on every click cycle.
               </p>
               <p>
-                <span className="font-bold">Hold</span> - Hold the hotkey to click continuously,
-                release to stop.
+                <span className="font-bold">Hold</span> - keep the input held while the clicker
+                runs.
               </p>
             </div>
           </TooltipContent>
         </Tooltip>
 
-        <div className="text-base font-semibold">Hotkey</div>
+        <div className="text-base font-semibold">Input</div>
       </div>
 
       <div className="flex gap-2">
         <ButtonGroup className="w-full">
-          <Input readOnly value={hotkeyLabel} />
+          <Input readOnly value={inputLabel} />
 
           <Button variant="outline" onClick={() => (isListening ? stop() : listen())}>
             {isListening ? 'Cancel' : 'Edit'}
@@ -104,15 +104,15 @@ export const HotkeyEditor = () => {
         <ButtonGroup>
           <Toggle
             variant="outline"
-            pressed={startHotkey?.mode === 'toggle'}
+            pressed={config?.mode === 'press'}
             disabled={isModeDisabled}
-            onPressedChange={(pressed) => pressed && handleModeChange('toggle')}
+            onPressedChange={(pressed) => pressed && handleModeChange('press')}
           >
-            Toggle
+            Press
           </Toggle>
           <Toggle
             variant="outline"
-            pressed={startHotkey?.mode === 'hold'}
+            pressed={config?.mode === 'hold'}
             disabled={isModeDisabled}
             onPressedChange={(pressed) => pressed && handleModeChange('hold')}
           >

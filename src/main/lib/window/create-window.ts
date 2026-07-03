@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { is } from '@electron-toolkit/utils';
 import { BrowserWindow, BrowserWindowConstructorOptions, shell } from 'electron';
 
-import icon from '../../../../resources/icon.png?asset';
+import icon from '../../../../resources/icon.svg?asset';
 
 interface CreateWindowOptions extends BrowserWindowConstructorOptions {
   showAfterReady?: boolean;
@@ -28,7 +28,7 @@ export const createWindow = (options: CreateWindowOptions): BrowserWindow => {
     titleBarStyle: 'default',
     titleBarOverlay: true,
     trafficLightPosition: { x: 6, y: 2 },
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon,
     ...windowOptions,
     webPreferences: {
       contextIsolation: true,

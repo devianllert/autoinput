@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDownIcon, InfoIcon } from 'lucide-react';
 
 import { ClickerTimingConfig } from '@/main/clicker/types';
-import { clampCps, MAX_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
 import { ipcActions } from '@/renderer/shared/api/ipc-client';
 import {
   DropdownMenu,
@@ -19,6 +18,8 @@ import {
   InputGroupInput,
 } from '@/renderer/shared/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
+
+import { clampCps, MAX_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
 
 type TimingUnit = 'second' | 'minute' | 'hour';
 

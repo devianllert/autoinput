@@ -10,7 +10,6 @@ type NtSetTimerResolutionFn = (
 ) => number;
 
 let ntSetTimerResolution: NtSetTimerResolutionFn | null = null;
-let enabled = false;
 
 const getNtSetTimerResolution = (): NtSetTimerResolutionFn | null => {
   if (process.platform !== 'win32') {
@@ -45,25 +44,11 @@ const setTimerResolution = (set: boolean): boolean => {
 };
 
 export const enableHighResolutionTimer = (): boolean => {
-  if (enabled) {
-    return true;
-  }
-
   const ok = setTimerResolution(true);
-
-  if (ok) {
-    enabled = true;
-  }
 
   return ok;
 };
 
 export const disableHighResolutionTimer = (): void => {
-  if (!enabled) {
-    return;
-  }
-
-  if (setTimerResolution(false)) {
-    enabled = false;
-  }
+  setTimerResolution(false);
 };

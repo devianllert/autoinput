@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { collectUiohookCodes } from '@/shared/hotkeys/dom';
+import {
+  collectRecordedInputCodes,
+  dedupeRecordedInputCodes,
+  type RecordedInputCode,
+} from '@/shared/hotkeys/dom';
 
 interface UseKeyboardListenerProps {
-  onRecord: (keys: number[]) => void;
+  onRecord: (keys: RecordedInputCode[]) => void;
 }
 
 export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [pressedKeys, setPressedKeys] = useState<number[]>([]);
-  const [recordedKeys, setRecordedKeys] = useState<number[] | null>(null);
+  const [pressedKeys, setPressedKeys] = useState<RecordedInputCode[]>([]);
+  const [recordedKeys, setRecordedKeys] = useState<RecordedInputCode[] | null>(null);
   const onRecordRef = useRef(onRecord);
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
   useEffect(() => {
     if (!isListening) return;
 
-    const pressed = new Set<number>();
+    const pressed: RecordedInputCode[] = [];
     let cancelled = false;
 
     const prevent = (event: Event) => {
@@ -46,8 +50,8 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
         return;
       }
 
-      collectUiohookCodes(event).forEach((code) => pressed.add(code));
-      setPressedKeys([...pressed]);
+      pressed.push(...collectRecordedInputCodes(event));
+      setPressedKeys(dedupeRecordedInputCodes(pressed));
     };
 
     const handleUp = (event: KeyboardEvent | MouseEvent) => {
@@ -57,7 +61,7 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
         return;
       }
 
-      const keys = [...new Set([...pressed, ...collectUiohookCodes(event)])];
+      const keys = dedupeRecordedInputCodes([...pressed, ...collectRecordedInputCodes(event)]);
       setIsListening(false);
       setPressedKeys([]);
 

@@ -1,5 +1,6 @@
 import { Conf } from 'electron-conf';
 
+import { DEFAULT_CLICKER_CONFIG, sanitizeClickerConfig } from '@/shared/clicker/config';
 import { clampCps } from '@/shared/clicker/limits';
 import { qKeys } from '@/shared/hotkeys/keys';
 
@@ -26,11 +27,11 @@ const ClickerStore = new Conf<{
 });
 
 export const getClickerConfig = (): ClickerConfig => {
-  return ClickerStore.get('config', defaultClickerConfig);
+  return sanitizeClickerConfig(ClickerStore.get('config', DEFAULT_CLICKER_CONFIG));
 };
 
 export const updateClickerConfig = (config: ClickerConfig): void => {
-  ClickerStore.set('config', config);
+  ClickerStore.set('config', sanitizeClickerConfig(config));
 };
 
 export const getClickerTiming = (): ClickerTimingConfig => {

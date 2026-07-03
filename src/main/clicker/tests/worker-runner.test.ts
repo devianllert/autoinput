@@ -8,8 +8,20 @@ type WorkerCallbacks = {
   onFinish?: (exitCode: number) => void;
 };
 
+const { powerSaveBlockerStart, powerSaveBlockerStop } = vi.hoisted(() => ({
+  powerSaveBlockerStart: vi.fn(() => 1),
+  powerSaveBlockerStop: vi.fn(),
+}));
+
 const workerCallbacks: WorkerCallbacks[] = [];
 const postMessage = vi.fn();
+
+vi.mock('electron', () => ({
+  powerSaveBlocker: {
+    start: powerSaveBlockerStart,
+    stop: powerSaveBlockerStop,
+  },
+}));
 
 vi.mock('../../ipc/listeners', () => ({
   getHandlers: vi.fn(() => ({
@@ -38,6 +50,13 @@ vi.mock('../timer-resolution', () => ({
   disableHighResolutionTimer: vi.fn(),
 }));
 
+vi.mock('../store', () => ({
+  getClickerConfig: vi.fn(() => ({
+    keys: [1],
+    mode: 'press' as const,
+  })),
+}));
+
 vi.mock('../../windows/main', () => ({
   getMainWindow: vi.fn(() => ({
     isDestroyed: () => true,
@@ -48,6 +67,8 @@ describe('ClickerRunner', () => {
   beforeEach(() => {
     workerCallbacks.length = 0;
     postMessage.mockClear();
+    powerSaveBlockerStart.mockClear();
+    powerSaveBlockerStop.mockClear();
   });
 
   it('sends stop even when stop is called before the worker finishes starting', () => {
@@ -75,5 +96,15 @@ describe('ClickerRunner', () => {
     runner.start(20);
 
     expect(runner.isRunning).toBe(true);
+  });
+
+  it('blocks display sleep only while the worker is running', () => {
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+    workerCallbacks[0]?.onFinish?.(0);
+
+    expect(powerSaveBlockerStart).toHaveBeenCalledWith('prevent-display-sleep');
+    expect(powerSaveBlockerStop).toHaveBeenCalledWith(1);
   });
 });

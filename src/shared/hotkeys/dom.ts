@@ -1,5 +1,15 @@
 import { qKeys } from './keys';
 
+export type RecordedInputCode =
+  | {
+      type: 'keyboard';
+      code: string;
+    }
+  | {
+      type: 'mouse';
+      button: number;
+    };
+
 const DOM_CODE_TO_UIOHOOK = new Map<string, number>([
   ['Backspace', qKeys.Backspace],
   ['Tab', qKeys.Tab],
@@ -125,22 +135,64 @@ const MOUSE_BUTTON_TO_UIOHOOK = new Map<number, number>([
   [4, qKeys.MouseButton5],
 ]);
 
-/** Maps a DOM keyboard or mouse event to uiohook key codes, including held modifiers. */
-export const collectUiohookCodes = (event: KeyboardEvent | MouseEvent): number[] => {
-  const codes = new Set<number>();
+export const collectRecordedInputCodes = (
+  event: KeyboardEvent | MouseEvent,
+): RecordedInputCode[] => {
+  const codes: RecordedInputCode[] = [];
 
-  if (event.ctrlKey) codes.add(qKeys.Ctrl);
-  if (event.shiftKey) codes.add(qKeys.Shift);
-  if (event.altKey) codes.add(qKeys.Alt);
-  if (event.metaKey) codes.add(qKeys.Meta);
+  if (event.ctrlKey) codes.push({ type: 'keyboard', code: 'ControlLeft' });
+  if (event.shiftKey) codes.push({ type: 'keyboard', code: 'ShiftLeft' });
+  if (event.altKey) codes.push({ type: 'keyboard', code: 'AltLeft' });
+  if (event.metaKey) codes.push({ type: 'keyboard', code: 'MetaLeft' });
 
   if (event instanceof KeyboardEvent) {
-    const keyCode = DOM_CODE_TO_UIOHOOK.get(event.code);
-    if (keyCode !== undefined) codes.add(keyCode);
+    codes.push({ type: 'keyboard', code: event.code });
   } else {
-    const buttonCode = MOUSE_BUTTON_TO_UIOHOOK.get(event.button);
-    if (buttonCode !== undefined) codes.add(buttonCode);
+    codes.push({ type: 'mouse', button: event.button });
   }
 
-  return [...codes];
+  return dedupeRecordedInputCodes(codes);
 };
+
+const getRecordedInputKey = (code: RecordedInputCode): string => {
+  if (code.type === 'keyboard') {
+    return `keyboard:${code.code}`;
+  }
+
+  return `mouse:${code.button}`;
+};
+
+export const dedupeRecordedInputCodes = (codes: RecordedInputCode[]): RecordedInputCode[] => {
+  const seen = new Set<string>();
+
+  return codes.filter((code) => {
+    const key = getRecordedInputKey(code);
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
+
+export const recordedInputCodesToUiohookCodes = (codes: RecordedInputCode[]): number[] => {
+  const uiohookCodes = codes.flatMap((code) => {
+    if (code.type === 'keyboard') {
+      const keyCode = DOM_CODE_TO_UIOHOOK.get(code.code);
+
+      return keyCode === undefined ? [] : [keyCode];
+    }
+
+    const buttonCode = MOUSE_BUTTON_TO_UIOHOOK.get(code.button);
+
+    return buttonCode === undefined ? [] : [buttonCode];
+  });
+
+  return [...new Set(uiohookCodes)];
+};
+
+/** Maps a DOM keyboard or mouse event to uiohook key codes, including held modifiers. */
+export const collectUiohookCodes = (event: KeyboardEvent | MouseEvent): number[] =>
+  recordedInputCodesToUiohookCodes(collectRecordedInputCodes(event));

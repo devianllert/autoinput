@@ -1,4 +1,4 @@
-appId: com.electron.app
+appId: devianllert.autoclicker
 productName: autoclicker
 directories:
   buildResources: build

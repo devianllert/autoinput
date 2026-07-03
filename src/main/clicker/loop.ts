@@ -1,4 +1,4 @@
-/** Blur-style batch size: fewer timer wakeups without bunching too many native calls. */
+/** Fewer timer wakeups without bunching too many native calls. */
 export const getBatchSize = (cps: number): number => {
   if (cps >= 50) {
     return 2;

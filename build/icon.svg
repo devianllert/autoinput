@@ -1,0 +1,28 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <!-- Background -->
+  <rect width="1024" height="1024" rx="120" fill="#000000"/>
+
+  <!-- Click rays -->
+  <g stroke="#FFFFFF" stroke-width="22.67" stroke-linecap="round">
+    <line x1="512" y1="128" x2="512" y2="194"/>
+    <line x1="282" y1="222" x2="329" y2="269"/>
+    <line x1="742" y1="222" x2="695" y2="269"/>
+    <line x1="162" y1="452" x2="228" y2="452"/>
+    <line x1="862" y1="452" x2="796" y2="452"/>
+  </g>
+
+  <!-- Target rings -->
+  <g stroke="#FFFFFF" stroke-width="30.67" stroke-linecap="round">
+    <circle cx="512" cy="474" r="204"/>
+    <circle cx="512" cy="474" r="110"/>
+  </g>
+
+  <!-- Cursor -->
+  <g transform="translate(48, 0)">
+    <!-- Cursor shadow cutout / inner fill -->
+    <path d="M498 468 L810 690 C829 704 824 734 801 741 L704 771 L790 898 C802 916 797 940 779 952 L721 991 C703 1003 679 998 667 980 L584 857 L514 948 C499 968 468 960 464 935 L430 498 C427 471 476 452 498 468Z" fill="#000000"/>
+
+    <!-- Cursor outline -->
+    <path d="M498 468 L810 690 C829 704 824 734 801 741 L704 771 L790 898 C802 916 797 940 779 952 L721 991 C703 1003 679 998 667 980 L584 857 L514 948 C499 968 468 960 464 935 L430 498 C427 471 476 452 498 468Z" stroke="#FFFFFF" stroke-width="28" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

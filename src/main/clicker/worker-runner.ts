@@ -1,7 +1,9 @@
 import { getHandlers } from '../ipc/listeners';
 import { enhancedWorker } from '../lib/enhanced-worker';
+import { PowerSaveBlocker } from '../lib/power-save-blocker';
+import { disableHighResolutionTimer, enableHighResolutionTimer } from '../lib/timer-resolution';
 import { getMainWindow } from '../windows/main';
-import { disableHighResolutionTimer, enableHighResolutionTimer } from './timer-resolution';
+import { getClickerConfig } from './store';
 import clickerWorker from './worker?nodeWorker';
 
 const notifyRenderer = (isRunning: boolean): void => {
@@ -18,14 +20,16 @@ export class ClickerRunner {
   public isRunning = false;
 
   private worker: ReturnType<typeof enhancedWorker> | null = null;
+  private readonly powerSaveBlocker = new PowerSaveBlocker();
 
   public start(cps: number): void {
-    if (this.worker) {
+    if (this.worker || !Number.isFinite(cps) || cps <= 0) {
       return;
     }
 
     this.isRunning = true;
     notifyRenderer(true);
+    this.powerSaveBlocker.start();
 
     if (enableHighResolutionTimer()) {
       console.log('[clicker] Windows timer resolution set to 1ms');
@@ -34,6 +38,7 @@ export class ClickerRunner {
     this.worker = enhancedWorker(clickerWorker, {
       data: {
         intervalMs: 1000 / cps,
+        config: getClickerConfig(),
       },
       onMessage: (message: unknown) => {
         if (message === 'stopped') {
@@ -46,6 +51,7 @@ export class ClickerRunner {
       },
       onFinish: () => {
         disableHighResolutionTimer();
+        this.powerSaveBlocker.stop();
         this.isRunning = false;
         this.worker = null;
         notifyRenderer(false);
