@@ -3,6 +3,7 @@ import { Conf } from 'electron-conf';
 import { DEFAULT_CLICKER_CONFIG, sanitizeClickerConfig } from '@/shared/clicker/config';
 import { clampCps } from '@/shared/clicker/limits';
 import { qKeys } from '@/shared/hotkeys/keys';
+import { WindowTargetConfig } from '@/shared/window-target/types';
 
 import { ClickerConfig, ClickerTimingConfig } from './types';
 
@@ -15,14 +16,20 @@ const defaultClickerTiming: ClickerTimingConfig = {
   cps: 20,
 };
 
+const defaultWindowTargetConfig: WindowTargetConfig = {
+  targetId: null,
+};
+
 const ClickerStore = new Conf<{
   config: ClickerConfig;
   timing: ClickerTimingConfig;
+  windowTarget: WindowTargetConfig;
 }>({
   name: 'clicker',
   defaults: {
     config: defaultClickerConfig,
     timing: defaultClickerTiming,
+    windowTarget: defaultWindowTargetConfig,
   },
 });
 
@@ -42,4 +49,16 @@ export const getClickerTiming = (): ClickerTimingConfig => {
 
 export const updateClickerTiming = (timing: ClickerTimingConfig): void => {
   ClickerStore.set('timing', { cps: clampCps(timing.cps) });
+};
+
+export const getWindowTargetConfig = (): WindowTargetConfig => {
+  const config = ClickerStore.get('windowTarget', defaultWindowTargetConfig);
+
+  return {
+    targetId: config.targetId || null,
+  };
+};
+
+export const updateWindowTargetConfig = (config: WindowTargetConfig): void => {
+  ClickerStore.set('windowTarget', { targetId: config.targetId || null });
 };

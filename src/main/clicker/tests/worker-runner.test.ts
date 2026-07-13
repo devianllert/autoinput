@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { WindowTarget, WindowTargetConfig } from '@/shared/window-target/types';
 
 import { ClickerRunner } from '../worker-runner';
 
@@ -11,6 +13,11 @@ type WorkerCallbacks = {
 const { powerSaveBlockerStart, powerSaveBlockerStop } = vi.hoisted(() => ({
   powerSaveBlockerStart: vi.fn(() => 1),
   powerSaveBlockerStop: vi.fn(),
+}));
+
+const { getWindowTargetConfig, getActiveWindowTarget } = vi.hoisted(() => ({
+  getWindowTargetConfig: vi.fn<() => WindowTargetConfig>(() => ({ targetId: null })),
+  getActiveWindowTarget: vi.fn<() => WindowTarget | null>(() => null),
 }));
 
 const workerCallbacks: WorkerCallbacks[] = [];
@@ -55,6 +62,11 @@ vi.mock('../store', () => ({
     keys: [1],
     mode: 'press' as const,
   })),
+  getWindowTargetConfig,
+}));
+
+vi.mock('../../lib/window-target/windows', () => ({
+  getActiveWindowTarget,
 }));
 
 vi.mock('../../windows/main', () => ({
@@ -64,11 +76,31 @@ vi.mock('../../windows/main', () => ({
 }));
 
 describe('ClickerRunner', () => {
+  const minecraftTarget: WindowTarget = {
+    id: 'minecraft.exe',
+    title: 'Minecraft',
+    processName: 'minecraft.exe',
+    processPath: null,
+  };
+  const notepadTarget: WindowTarget = {
+    id: 'notepad.exe',
+    title: 'Notepad',
+    processName: 'notepad.exe',
+    processPath: null,
+  };
+
   beforeEach(() => {
+    vi.useFakeTimers();
     workerCallbacks.length = 0;
     postMessage.mockClear();
     powerSaveBlockerStart.mockClear();
     powerSaveBlockerStop.mockClear();
+    getWindowTargetConfig.mockReturnValue({ targetId: null });
+    getActiveWindowTarget.mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('sends stop even when stop is called before the worker finishes starting', () => {
@@ -106,5 +138,45 @@ describe('ClickerRunner', () => {
 
     expect(powerSaveBlockerStart).toHaveBeenCalledWith('prevent-display-sleep');
     expect(powerSaveBlockerStop).toHaveBeenCalledWith(1);
+  });
+
+  it('does not start when a selected target does not match the active window', () => {
+    getWindowTargetConfig.mockReturnValue({ targetId: 'minecraft.exe' });
+    getActiveWindowTarget.mockReturnValue(notepadTarget);
+
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+
+    expect(runner.isRunning).toBe(false);
+    expect(workerCallbacks).toHaveLength(0);
+  });
+
+  it('stops when the selected target no longer matches after guard sync', () => {
+    getWindowTargetConfig.mockReturnValue({ targetId: 'minecraft.exe' });
+    getActiveWindowTarget.mockReturnValue(minecraftTarget);
+
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+    getActiveWindowTarget.mockReturnValue(notepadTarget);
+    runner.applyWindowTargetConfig();
+
+    expect(runner.isRunning).toBe(false);
+    expect(postMessage).toHaveBeenCalledWith('stop');
+  });
+
+  it('stops when the active window changes to a different target', () => {
+    getWindowTargetConfig.mockReturnValue({ targetId: 'minecraft.exe' });
+    getActiveWindowTarget.mockReturnValue(minecraftTarget);
+
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+    getActiveWindowTarget.mockReturnValue(notepadTarget);
+    vi.advanceTimersByTime(250);
+
+    expect(runner.isRunning).toBe(false);
+    expect(postMessage).toHaveBeenCalledWith('stop');
   });
 });

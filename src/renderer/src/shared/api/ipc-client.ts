@@ -1,7 +1,7 @@
 import { createClient, createEventHandlers } from '@egoist/tipc/renderer';
 
-import { IPCRouter } from '@/main/ipc/actions';
 import { RendererHandlers } from '@/main/ipc/listeners';
+import { IPCRouter } from '@/main/ipc/router';
 
 export const ipcActions = createClient<IPCRouter>({
   // pass ipcRenderer.invoke function to the client

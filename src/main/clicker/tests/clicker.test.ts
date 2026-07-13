@@ -4,7 +4,7 @@ import { createClicker } from '../clicker';
 import { HoldClicker } from '../hold-clicker';
 import { PressClicker } from '../press-clicker';
 
-vi.mock('../input', () => ({
+vi.mock('../../lib/automation/input', () => ({
   performInputTap: vi.fn(),
   performInputDown: vi.fn(),
   performInputUp: vi.fn(),

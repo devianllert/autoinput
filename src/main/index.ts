@@ -3,7 +3,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { app, BrowserWindow } from 'electron';
 
 import { registerHotkeys } from './hotkeys/hotkeys';
-import { router } from './ipc/actions';
+import { router } from './ipc/router';
 import { createMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));

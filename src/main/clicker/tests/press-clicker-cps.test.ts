@@ -6,7 +6,7 @@ import { performInputTap } from '../../lib/automation/input';
 import { getBatchSize } from '../loop';
 import { PressClicker } from '../press-clicker';
 
-vi.mock('../input', () => ({
+vi.mock('../../lib/automation/input', () => ({
   performInputTap: vi.fn(),
 }));
 

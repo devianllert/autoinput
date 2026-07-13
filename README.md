@@ -2,6 +2,10 @@
 
 Automation tool that lets you automate mouse clicks and keyboard keys.
 
+## Features
+
+- Can be limited to a selected foreground app window (currently windows only)
+
 ## Why cps is lower with more keys
 
 CPS is how many times per second the app repeats the selected action. One key or mouse button is a single press and release; a combo like `Ctrl + Shift + A` needs several presses and releases per repeat.
