@@ -1,9 +1,11 @@
+import type { WindowTargetConfig } from '@/shared/window-target/types';
+
 import { getHandlers } from '../ipc/listeners';
 import { enhancedWorker } from '../lib/enhanced-worker';
 import { PowerSaveBlocker } from '../lib/power-save-blocker';
 import { disableHighResolutionTimer, enableHighResolutionTimer } from '../lib/timer-resolution';
 import { getMainWindow } from '../windows/main';
-import { getClickerConfig } from './store';
+import { getClickerConfig, getWindowTargetConfig } from './store';
 import { WindowTargetGuard } from './window-target-guard';
 import clickerWorker from './worker?nodeWorker';
 
@@ -28,6 +30,8 @@ export class ClickerRunner {
     if (this.worker || !Number.isFinite(cps) || cps <= 0) {
       return;
     }
+
+    this.windowTargetGuard.setTarget(getWindowTargetConfig());
 
     if (!this.windowTargetGuard.canRunInActiveWindow()) {
       return;
@@ -82,7 +86,9 @@ export class ClickerRunner {
     this.worker.postMessage('stop');
   }
 
-  public applyWindowTargetConfig(): void {
+  public applyWindowTargetConfig(config: WindowTargetConfig = getWindowTargetConfig()): void {
+    this.windowTargetGuard.setTarget(config);
+
     if (!this.isRunning) {
       this.windowTargetGuard.stop();
       return;

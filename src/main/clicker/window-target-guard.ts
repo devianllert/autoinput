@@ -1,7 +1,6 @@
-import type { WindowTarget } from '@/shared/window-target/types';
+import type { WindowTarget, WindowTargetConfig } from '@/shared/window-target/types';
 
 import { getActiveWindowTarget } from '../lib/window-target/windows';
-import { getWindowTargetConfig } from './store';
 
 const ACTIVE_WINDOW_CHECK_MS = 250;
 
@@ -13,25 +12,28 @@ type WindowTargetGuardHandlers = {
 export class WindowTargetGuard {
   private timer: NodeJS.Timeout | null = null;
   private lastActiveTargetId: string | null = null;
+  private targetId: string | null = null;
   private handlers: WindowTargetGuardHandlers = {};
 
-  public canRunInActiveWindow(): boolean {
-    const { targetId } = getWindowTargetConfig();
+  public setTarget(config: WindowTargetConfig): void {
+    this.targetId = config.targetId || null;
+  }
 
-    if (!targetId) {
+  public canRunInActiveWindow(): boolean {
+    if (!this.targetId) {
       return true;
     }
 
     const activeWindow = getActiveWindowTarget();
     this.lastActiveTargetId = activeWindow?.id ?? null;
 
-    return activeWindow?.id === targetId;
+    return activeWindow?.id === this.targetId;
   }
 
   public start(handlers: WindowTargetGuardHandlers): void {
     this.handlers = handlers;
 
-    if (!getWindowTargetConfig().targetId || this.timer) {
+    if (!this.targetId || this.timer) {
       return;
     }
 
@@ -43,7 +45,7 @@ export class WindowTargetGuard {
   }
 
   public sync(): void {
-    if (!getWindowTargetConfig().targetId) {
+    if (!this.targetId) {
       this.stop();
       return;
     }
@@ -74,9 +76,7 @@ export class WindowTargetGuard {
       this.handlers.onWindowChanged?.(activeWindow);
     }
 
-    const { targetId } = getWindowTargetConfig();
-
-    if (targetId && activeTargetId !== targetId) {
+    if (this.targetId && activeTargetId !== this.targetId) {
       this.handlers.onTargetMismatch?.(activeWindow);
     }
   }

@@ -39,7 +39,7 @@ export const clickerRouter = {
   }),
   updateWindowTargetConfig: t.procedure.input<WindowTargetConfig>().action(async ({ input }) => {
     updateWindowTargetConfig(input);
-    autoClicker.applyWindowTargetConfig();
+    autoClicker.applyWindowTargetConfig(input);
     return Promise.resolve();
   }),
   isClickerRunning: t.procedure.action(async () => {
