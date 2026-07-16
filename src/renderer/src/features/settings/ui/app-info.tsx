@@ -8,7 +8,7 @@ export const AppInfo = (): React.ReactNode => {
   return (
     <div className="bg-card flex items-center gap-4 rounded-lg p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="text-sm font-medium">AutoClicker</p>
+        <p className="text-sm font-medium">AutoInput</p>
         <p className="text-muted-foreground text-xs">Version {__VERSION__}</p>
       </div>
 

@@ -1,4 +1,4 @@
-# autoclicker
+# autoinput
 
 Automation tool that lets you automate mouse clicks and keyboard keys.
 

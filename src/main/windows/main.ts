@@ -7,7 +7,7 @@ let mainWindow: BrowserWindow | null = null;
 export const createMainWindow = (): BrowserWindow => {
   mainWindow = createWindow({
     path: '/',
-    title: 'autoclicker',
+    title: 'AutoInput',
     width: 560,
     height: 570,
     minWidth: 360,

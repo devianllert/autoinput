@@ -41,7 +41,7 @@ describe('AutoLaunchController', () => {
       name: 'portable',
       isPackaged: true,
       platform: 'win32' as const,
-      portable: 'C:\\Tools\\autoclicker.exe',
+      portable: 'C:\\Tools\\autoinput.exe',
       inApplications: true,
     },
     {

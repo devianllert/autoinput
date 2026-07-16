@@ -1,5 +1,5 @@
-appId: devianllert.autoclicker
-productName: autoclicker
+appId: devianllert.autoinput
+productName: autoinput
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: autoclicker
+  executableName: autoinput
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

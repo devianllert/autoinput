@@ -10,9 +10,9 @@ const AUTO_LAUNCH_QUERY_KEY = ['auto-launch'] as const;
 const getDescription = (state: AutoLaunchState | undefined, hasError: boolean): string => {
   if (hasError) return 'Could not update this setting. Try again.';
   if (!state) return 'Checking availability...';
-  if (!state.available) return 'Available only in the installed version of AutoClicker.';
+  if (!state.available) return 'Available only in the installed version of AutoInput.';
 
-  return 'Open AutoClicker automatically on system startup.';
+  return 'Open AutoInput automatically on system startup.';
 };
 
 export const AutoLaunchSetting = (): React.ReactNode => {
@@ -44,7 +44,7 @@ export const AutoLaunchSetting = (): React.ReactNode => {
         id="auto-launch"
         checked={state?.enabled ?? false}
         disabled={!isAvailable || updateMutation.isPending}
-        aria-label="Launch AutoClicker at startup"
+        aria-label="Launch AutoInput at startup"
         onCheckedChange={(checked) => updateMutation.mutate(checked)}
       />
     </div>

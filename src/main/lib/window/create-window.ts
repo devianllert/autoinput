@@ -18,7 +18,7 @@ export const createWindow = (options: CreateWindowOptions): BrowserWindow => {
   const { showAfterReady, path, query, ...windowOptions } = options;
 
   const window = new BrowserWindow({
-    title: 'autoclicker',
+    title: 'AutoInput',
     width: 900,
     height: 670,
     show: false,

@@ -27,7 +27,7 @@ export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode =>
                 isClickerRunning ? 'bg-green-500' : 'bg-muted',
               )}
             />
-            <h1 className="text-sm font-bold">AutoClicker</h1>
+            <h1 className="text-sm font-bold">AutoInput</h1>
           </div>
 
           <div className="ml-auto flex items-center gap-1 [app-region:no-drag]">
