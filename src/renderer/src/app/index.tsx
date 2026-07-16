@@ -1,14 +1,36 @@
+import { useState } from 'react';
+import { Settings } from 'lucide-react';
+
 import { ClickerOptions } from '../features/clicker-options/ui';
+import { SettingsScreen } from '../features/settings/ui';
+import { Button } from '../shared/ui/button';
 import { Frame } from './frame';
 
 export const App = (): React.ReactNode => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <Frame>
-      <div className="flex flex-1 flex-col p-2">
-        <div className="flex flex-col gap-2">
-          <ClickerOptions />
+      {isSettingsOpen ? (
+        <SettingsScreen onBack={() => setIsSettingsOpen(false)} />
+      ) : (
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-y-auto p-2 pb-12">
+            <ClickerOptions />
+          </div>
+
+          <Button
+            variant="secondary"
+            size="icon-lg"
+            className="absolute right-2 bottom-2 shadow-sm"
+            aria-label="Open settings"
+            title="Settings"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Settings />
+          </Button>
         </div>
-      </div>
+      )}
     </Frame>
   );
 };
