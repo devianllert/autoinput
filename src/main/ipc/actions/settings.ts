@@ -1,6 +1,6 @@
 import { tipc } from '@egoist/tipc/main';
 
-import { autoLaunch } from '../../settings/auto-launch';
+import { autoLaunch } from '../../lib/auto-launch/auto-launch';
 
 const t = tipc.create();
 

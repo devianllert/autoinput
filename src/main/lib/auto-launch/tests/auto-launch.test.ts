@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AutoLaunch, type AutoLaunchDependencies } from '../auto-launch';
+import { AutoLaunch, type AutoLaunchDependencies } from '../../../settings/auto-launch';
 
 vi.mock('electron', () => ({
   app: {
