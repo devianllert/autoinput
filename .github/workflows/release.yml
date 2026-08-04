@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  publish:
-    name: Publish ${{ matrix.platform }}
+  build:
+    name: Build ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -18,10 +18,10 @@ jobs:
         include:
           - platform: Windows
             os: windows-latest
-            script: build:win:publish
+            builder_args: --win
           - platform: macOS
             os: macos-latest
-            script: build:mac:publish
+            builder_args: --mac
 
     steps:
       - name: Check out repository
@@ -44,7 +44,54 @@ jobs:
       - name: Build application
         run: pnpm build
 
-      - name: Publish ${{ matrix.platform }} artifacts
-        run: pnpm run ${{ matrix.script }}
+      - name: Package ${{ matrix.platform }} application
+        run: pnpm exec electron-builder ${{ matrix.builder_args }} --publish never
+
+      - name: Store ${{ matrix.platform }} artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+
+      - name: Check for existing release
+        id: release
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create release and upload artifacts
+        if: steps.release.outputs.exists == 'false'
+        run: gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --title "${GITHUB_REF_NAME#v}" --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload artifacts to existing release
+        if: steps.release.outputs.exists == 'true'
+        run: gh release upload "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --clobber
         env:
           GH_TOKEN: ${{ github.token }}
