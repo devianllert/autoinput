@@ -41,22 +41,16 @@ $ pnpm build:linux
 
 ### Release to GitHub
 
-The release command asks for a version, builds the app, creates and pushes the version commit and
-`vX.Y.Z` tag, and lets electron-builder publish the generated Windows artifacts to a public GitHub
-Release.
+The release command asks for a version, creates and pushes the version commit and `vX.Y.Z` tag.
+The tag starts GitHub Actions jobs on native Windows and macOS runners. Electron-builder uploads
+both platform artifacts to the same public GitHub Release.
 
-Before releasing, use a clean branch that is synchronized with its upstream and provide a
-fine-grained GitHub token with **Contents: Read and write** permission:
+Before releasing, use a clean branch that is synchronized with its upstream:
 
 ```powershell
-$env:GITHUB_RELEASE_TOKEN = 'github_pat_...'
 pnpm release
 ```
 
-Enter a stable version such as `0.2.0` when prompted. The token is read only from the environment
-and must not be committed. If publishing fails after the tag has already been pushed, retry the
-electron-builder publish step without creating another version:
-
-```powershell
-pnpm build:win:publish
-```
+Enter a stable version such as `0.2.0` when prompted. Build and publishing progress is available in
+the repository's **Actions** tab. The workflow uses GitHub's built-in token with `Contents: write`
+permission, so a local `GH_TOKEN` is not required.
