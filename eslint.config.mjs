@@ -6,7 +6,9 @@ import eslintPluginReactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig(
-  { ignores: ['**/node_modules', '**/dist', '**/out', 'eslint.config.mjs'] },
+  {
+    ignores: ['**/node_modules', '**/dist', '**/out', 'eslint.config.mjs', 'scripts/release.mjs'],
+  },
   tseslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   eslintPluginReact.configs.flat.recommended,

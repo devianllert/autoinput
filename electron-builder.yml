@@ -13,6 +13,8 @@ asarUnpack:
   - resources/**
 win:
   executableName: autoinput
+  target:
+    - nsis
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -39,5 +41,8 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: devianllert
+  repo: autoinput
+  releaseType: release
+  publishAutoUpdate: false
