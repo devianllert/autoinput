@@ -1,37 +1,96 @@
-import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { stdin, stdout } from 'node:process';
-import { createInterface } from 'node:readline/promises';
+import { execSync } from "node:child_process";
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import Readline from "node:readline";
+import dotenv from "dotenv";
 
-const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run');
-const packageMetadata = JSON.parse(await readFile('package.json', 'utf8'));
-const prompt = createInterface({ input: stdin, output: stdout });
-const inputVersion = args.find((argument) => !argument.startsWith('--'));
+import packageJSON from "../package.json" with { type: "json" };
+import { checkValidations } from "./version.mjs";
 
-const version = (
-  inputVersion ?? (await prompt.question(`New version (${packageMetadata.version}): `))
-)
-  .trim()
-  .replace(/^v/, '');
-prompt.close();
+dotenv.config();
 
-if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)) {
-  throw new Error('Version must use the stable X.Y.Z format, for example 1.2.0.');
+function makeOptions(options) {
+  return {
+    stdio: options?.inherit ? "inherit" : "pipe",
+    cwd: resolve(),
+    encoding: "utf8",
+  };
 }
 
-if (dryRun) {
-  console.log(`Dry run passed: pnpm version ${version}`);
-  process.exit(0);
+const exec = (commands, options) => {
+  const outputs = [];
+
+  for (const command of commands) {
+    const output = execSync(command, makeOptions(options));
+    outputs.push(output);
+  }
+
+  return outputs;
+};
+
+const validateRequiredEnv = () => {
+  if (!process.env.GH_TOKEN?.trim()) {
+    throw new Error("Missing required GH_TOKEN for GitHub release publishing");
+  }
+};
+
+const question = (question) => {
+  const readline = Readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    readline.question(question, (answer) => {
+      readline.close();
+      resolve(answer);
+    });
+  });
+};
+
+async function makeRelease() {
+  console.clear();
+
+  const { version } = packageJSON;
+
+  const newVersion = await question(`Enter a new version: (current is ${version})`);
+
+  if (checkValidations({ version, newVersion })) {
+    return;
+  }
+
+  packageJSON.version = newVersion;
+
+  try {
+    validateRequiredEnv();
+
+    console.log(`> Updating package.json version...`);
+
+    await writeFile(resolve("package.json"), JSON.stringify(packageJSON, null, 2));
+
+    console.log(`\nDone!\n`);
+    console.log(`> Creating git tag and publishing artifacts...`);
+
+    exec(
+      [
+        `git commit -am v${newVersion}`,
+        `git tag v${newVersion}`,
+        `git push`,
+        `git push --tags`,
+        `npm run build:win:publish`,
+      ],
+      {
+        inherit: true,
+      },
+    );
+
+    console.log(`\nDone!\n`);
+  } catch ({ message }) {
+    console.log(`
+    🛑 Something went wrong!\n
+      👀 Error: ${message}
+    `);
+  }
 }
 
-if (!(process.env.GITHUB_RELEASE_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN)) {
-  throw new Error('Set GITHUB_RELEASE_TOKEN with GitHub Contents read/write permission.');
-}
-
-const command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-const child = spawn(command, ['version', version], { stdio: 'inherit', shell: false });
-process.exitCode = await new Promise((resolve, reject) => {
-  child.once('error', reject);
-  child.once('exit', (code) => resolve(code ?? 1));
-});
+await makeRelease();
