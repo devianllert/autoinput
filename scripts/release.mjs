@@ -1,19 +1,16 @@
-import { execSync } from "node:child_process";
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import Readline from "node:readline";
-import dotenv from "dotenv";
+import { execSync } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import Readline from 'node:readline';
 
-import packageJSON from "../package.json" with { type: "json" };
-import { checkValidations } from "./version.mjs";
-
-dotenv.config();
+import packageJSON from '../package.json' with { type: 'json' };
+import { checkValidations } from './version.mjs';
 
 function makeOptions(options) {
   return {
-    stdio: options?.inherit ? "inherit" : "pipe",
+    stdio: options?.inherit ? 'inherit' : 'pipe',
     cwd: resolve(),
-    encoding: "utf8",
+    encoding: 'utf8',
   };
 }
 
@@ -26,12 +23,6 @@ const exec = (commands, options) => {
   }
 
   return outputs;
-};
-
-const validateRequiredEnv = () => {
-  if (!process.env.GH_TOKEN?.trim()) {
-    throw new Error("Missing required GH_TOKEN for GitHub release publishing");
-  }
 };
 
 const question = (question) => {
@@ -62,29 +53,21 @@ async function makeRelease() {
   packageJSON.version = newVersion;
 
   try {
-    validateRequiredEnv();
-
     console.log(`> Updating package.json version...`);
 
-    await writeFile(resolve("package.json"), JSON.stringify(packageJSON, null, 2));
+    await writeFile(resolve('package.json'), JSON.stringify(packageJSON, null, 2));
 
     console.log(`\nDone!\n`);
-    console.log(`> Creating git tag and publishing artifacts...`);
+    console.log(`> Creating git tag and starting release builds...`);
 
     exec(
-      [
-        `git commit -am v${newVersion}`,
-        `git tag v${newVersion}`,
-        `git push`,
-        `git push --tags`,
-        `npm run build:win:publish`,
-      ],
+      [`git commit -am v${newVersion}`, `git tag v${newVersion}`, `git push`, `git push --tags`],
       {
         inherit: true,
       },
     );
 
-    console.log(`\nDone!\n`);
+    console.log(`\nRelease builds started in GitHub Actions.\n`);
   } catch ({ message }) {
     console.log(`
     🛑 Something went wrong!\n
