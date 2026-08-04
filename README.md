@@ -38,19 +38,3 @@ $ pnpm build:mac
 # For Linux
 $ pnpm build:linux
 ```
-
-### Release to GitHub
-
-The release command asks for a version, creates and pushes the version commit and `vX.Y.Z` tag.
-The tag starts GitHub Actions jobs on native Windows and macOS runners. After both builds finish, a
-single publishing job uploads all platform artifacts to the same public GitHub Release.
-
-Before releasing, use a clean branch that is synchronized with its upstream:
-
-```powershell
-pnpm release
-```
-
-Enter a stable version such as `0.2.0` when prompted. Build and publishing progress is available in
-the repository's **Actions** tab. The workflow uses GitHub's built-in token with `Contents: write`
-permission, so a local `GH_TOKEN` is not required.
