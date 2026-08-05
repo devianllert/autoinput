@@ -24,6 +24,10 @@ nsis:
 portable:
   artifactName: ${name}-${version}-portable.${ext}
 mac:
+  # Keep the Electron bundle internally consistent without requiring a paid
+  # Developer ID certificate. Gatekeeper will still require user approval.
+  identity: '-'
+  hardenedRuntime: false
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
