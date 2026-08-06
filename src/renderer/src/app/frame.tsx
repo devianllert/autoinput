@@ -8,6 +8,10 @@ import { Button } from '../shared/ui/button';
 
 export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode => {
   const isClickerRunning = useClickerRunning();
+  const platform = window.electron.process.platform;
+  const isMacOS = platform === 'darwin';
+  const isWindows = platform === 'win32';
+
   const handleMinimize = () => {
     void ipcActions.minimize();
   };
@@ -18,32 +22,39 @@ export const Frame = ({ children }: React.PropsWithChildren): React.ReactNode =>
 
   return (
     <div className="flex h-screen w-screen flex-col">
-      <div className="bg-card flex h-9 w-full px-2 py-1 pr-1 [app-region:drag]">
+      <div
+        className={cn(
+          'bg-card flex h-9 w-full py-1 pr-1 [app-region:drag]',
+          isMacOS ? 'pl-[78px]' : 'pl-2',
+        )}
+      >
         <div className="flex h-full w-full items-center">
           <div className="flex items-center gap-2">
+            <h1 className="text-sm font-bold">AutoInput</h1>
             <div
               className={cn(
                 'size-2 rounded-full transition-colors',
                 isClickerRunning ? 'bg-green-500' : 'bg-muted',
               )}
             />
-            <h1 className="text-sm font-bold">AutoInput</h1>
           </div>
 
-          <div className="ml-auto flex items-center gap-1 [app-region:no-drag]">
-            <Button variant="ghost" size="icon" onClick={handleMinimize}>
-              <Minus className="h-4 w-4" />
-            </Button>
+          {isWindows && (
+            <div className="ml-auto flex items-center gap-1 [app-region:no-drag]">
+              <Button variant="ghost" size="icon" onClick={handleMinimize}>
+                <Minus className="h-4 w-4" />
+              </Button>
 
-            <Button
-              variant="ghost"
-              className="dark:hover:bg-destructive/10 hover:text-destructive"
-              size="icon"
-              onClick={handleClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                className="dark:hover:bg-destructive/10 hover:text-destructive"
+                size="icon"
+                onClick={handleClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
