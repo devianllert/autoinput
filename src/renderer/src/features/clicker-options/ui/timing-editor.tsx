@@ -19,7 +19,7 @@ import {
 } from '@/renderer/shared/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
 
-import { clampCps, MAX_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
+import { clampCps, MAX_CLICKS_PER_SECOND, MIN_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
 
 type TimingUnit = 'second' | 'minute' | 'hour';
 
@@ -49,12 +49,17 @@ export const TimingEditor = () => {
     },
   });
 
-  const handleCpsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const display = Number(e.target.value);
+  const commitCps = (event: React.FocusEvent<HTMLInputElement>) => {
+    const displayCps = event.currentTarget.value;
+    const nextCps = clampCps(
+      displayCps.trim() === '' ? MIN_CLICKS_PER_SECOND : displayToCps(Number(displayCps), rateUnit),
+    );
 
-    const cps = displayToCps(display, rateUnit);
+    event.currentTarget.value = String(cpsToDisplay(nextCps, rateUnit));
 
-    updateTimingMutation.mutate({ cps: clampCps(cps) });
+    if (nextCps !== timing?.cps) {
+      updateTimingMutation.mutate({ cps: nextCps });
+    }
   };
 
   const handleRateUnitChange = (unit: TimingUnit) => {
@@ -62,8 +67,6 @@ export const TimingEditor = () => {
 
     setRateUnit(unit);
   };
-
-  const displayCps = timing ? cpsToDisplay(timing.cps, rateUnit) : '';
 
   return (
     <div className="bg-card flex w-full flex-col gap-2 rounded-lg p-2">
@@ -87,7 +90,18 @@ export const TimingEditor = () => {
 
       <div className="flex gap-2">
         <InputGroup>
-          <InputGroupInput type="number" value={displayCps} onChange={handleCpsChange} />
+          <InputGroupInput
+            key={`${rateUnit}:${timing?.cps ?? 'loading'}`}
+            type="number"
+            defaultValue={timing ? cpsToDisplay(timing.cps, rateUnit) : ''}
+            disabled={!timing}
+            onBlur={commitCps}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.currentTarget.blur();
+              }
+            }}
+          />
           <InputGroupAddon align="inline-end">
             <div className="flex items-center">
               <DropdownMenu>

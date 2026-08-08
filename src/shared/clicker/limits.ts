@@ -1,4 +1,3 @@
-/** Lowest supported click rate. */
 export const MIN_CLICKS_PER_SECOND = 1;
 
 /**
