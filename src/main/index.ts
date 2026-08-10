@@ -4,6 +4,7 @@ import { app, BrowserWindow } from 'electron';
 
 import { registerHotkeys } from './hotkeys/hotkeys';
 import { router } from './ipc/router';
+import { accessibilityPermission } from './lib/accessibility/accessibility-permission';
 import { createMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
@@ -40,7 +41,12 @@ const bootstrap = async () => {
   registerIpcMain(router);
   createMainWindow();
 
-  registerHotkeys();
+  const accessibilityPermissionState = accessibilityPermission.check();
+
+  if (accessibilityPermissionState.granted) {
+    const hotkeys = registerHotkeys();
+    hotkeys.run();
+  }
 };
 
 void bootstrap();

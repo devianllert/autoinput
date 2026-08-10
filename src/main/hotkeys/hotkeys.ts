@@ -4,7 +4,7 @@ import { getHotkeys } from './store';
 
 const hotkeys = new Hotkeys();
 
-export const registerHotkeys = () => {
+export const registerHotkeys = (): Hotkeys => {
   hotkeys.unregisterAll();
 
   const savedHotkeys = getHotkeys();
@@ -28,6 +28,5 @@ export const registerHotkeys = () => {
     hotkeys.register(hotkeyRegistration);
   });
 
-  hotkeys.stop();
-  hotkeys.run();
+  return hotkeys;
 };

@@ -1,15 +1,14 @@
 import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/renderer/shared/ui/button';
+import { AppInfo } from '../features/settings/ui/app-info';
+import { AutoLaunchSetting } from '../features/settings/ui/auto-launch-setting';
+import { APP_ROUTES } from '../shared/routes';
+import { Button } from '../shared/ui/button';
 
-import { AppInfo } from './ui/app-info';
-import { AutoLaunchSetting } from './ui/auto-launch-setting';
+export const SettingsScreen = (): React.ReactNode => {
+  const navigate = useNavigate();
 
-type SettingsScreenProps = {
-  onBack: () => void;
-};
-
-export const SettingsScreen = ({ onBack }: SettingsScreenProps): React.ReactNode => {
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="settings-title">
       <header className="flex items-center gap-2 border-b p-2">
@@ -18,7 +17,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps): React.ReactNode
           size="icon"
           aria-label="Back to main screen"
           title="Back"
-          onClick={onBack}
+          onClick={() => navigate(APP_ROUTES.main)}
         >
           <ArrowLeft />
         </Button>
