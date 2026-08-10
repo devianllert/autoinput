@@ -12,7 +12,9 @@ can repeatedly press mouse buttons, keyboard keys, or key combinations at a conf
 - Input modes: **Press** to repeat taps, and **Hold** to keep the selected input pressed
 - Restrict input to a selected foreground app (Windows only)
 
-## Why cps is lower with more keys
+## FAQ
+
+###/ Why cps is lower with more keys
 
 CPS is how many times per second the app repeats the selected action. One key or mouse button is a single press and release; a combo like `Ctrl + Shift + A` needs several presses and releases per repeat.
 
