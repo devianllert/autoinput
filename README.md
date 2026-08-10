@@ -5,12 +5,12 @@ can repeatedly press mouse buttons, keyboard keys, or key combinations at a conf
 
 ## Features
 
-- Windows and macOS support
-- Mouse buttons, keyboard keys, and key combinations
+- Automate mouse buttons, keyboard keys, and key combinations
 - Configurable rate in clicks per second, minute, or hour
 - Hotkey modes: **Toggle** to start or stop on press, and **Hold** to run while held
 - Input modes: **Press** to repeat taps, and **Hold** to keep the selected input pressed
-- Restrict input to a selected foreground app (Windows only)
+- Restrict automation to a selected foreground app (Windows only)
+- Windows and macOS support
 
 ## FAQ
 
