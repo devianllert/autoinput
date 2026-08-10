@@ -14,7 +14,7 @@ can repeatedly press mouse buttons, keyboard keys, or key combinations at a conf
 
 ## FAQ
 
-###/ Why cps is lower with more keys
+### Why cps is lower with more keys
 
 CPS is how many times per second the app repeats the selected action. One key or mouse button is a single press and release; a combo like `Ctrl + Shift + A` needs several presses and releases per repeat.
 
