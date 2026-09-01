@@ -1,3 +1,4 @@
+import { autoUpdate } from '../lib/auto-update';
 import { clickerRouter } from './actions/clicker';
 import { permissionsRouter } from './actions/permissions';
 import { settingsRouter } from './actions/settings';
@@ -12,6 +13,7 @@ export const router = {
   ...clickerRouter,
   ...permissionsRouter,
   ...settingsRouter,
+  ...autoUpdate.ipc,
 };
 
 export type IPCRouter = typeof router;

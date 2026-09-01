@@ -7,7 +7,15 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig(
   {
-    ignores: ['**/node_modules', '**/dist', '**/out', 'eslint.config.mjs', 'scripts/release.mjs'],
+    ignores: [
+      '**/node_modules',
+      '**/dist',
+      '**/out',
+      'eslint.config.mjs',
+      'scripts/release.mjs',
+      'scripts/version.mjs',
+      'scripts/preview-updater.mjs',
+    ],
   },
   tseslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,

@@ -11,6 +11,7 @@ can repeatedly press mouse buttons, keyboard keys, or key combinations at a conf
 - Input modes: **Press** to repeat taps, and **Hold** to keep the selected input pressed
 - Restrict automation to a selected foreground app (Windows only)
 - Windows and macOS support
+- Automatic update checks, downloads, and restart-to-install controls on Windows and macOS
 
 ## FAQ
 
@@ -34,6 +35,12 @@ $ pnpm install
 
 ```bash
 $ pnpm dev
+```
+
+To build and start the updater-enabled preview using `dev-app-update.yml`, run:
+
+```bash
+$ pnpm start:update-dev
 ```
 
 ### Build

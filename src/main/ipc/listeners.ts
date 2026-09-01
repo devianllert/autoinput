@@ -1,7 +1,9 @@
 import { getRendererHandlers } from '@egoist/tipc/main';
 import { WebContents } from 'electron';
 
-export type RendererHandlers = {
+import type { AutoUpdateRendererHandlers } from '../lib/auto-update';
+
+export type RendererHandlers = AutoUpdateRendererHandlers & {
   log: (message: string) => void;
   clickerStateChanged: (running: boolean) => void;
 };

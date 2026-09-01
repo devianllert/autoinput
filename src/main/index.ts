@@ -5,6 +5,7 @@ import { app, BrowserWindow } from 'electron';
 import { registerHotkeys } from './hotkeys/hotkeys';
 import { router } from './ipc/router';
 import { accessibilityPermission } from './lib/accessibility/accessibility-permission';
+import { autoUpdate } from './lib/auto-update';
 import { createMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
@@ -39,7 +40,8 @@ const bootstrap = async () => {
   });
 
   registerIpcMain(router);
-  createMainWindow();
+  const mainWindow = createMainWindow();
+  autoUpdate.setup(mainWindow);
 
   const accessibilityPermissionState = accessibilityPermission.check();
 

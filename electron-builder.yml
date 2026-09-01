@@ -52,4 +52,4 @@ publish:
   owner: devianllert
   repo: autoinput
   releaseType: release
-  publishAutoUpdate: false
+  publishAutoUpdate: true
