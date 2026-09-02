@@ -79,7 +79,6 @@ describe('auto updater', () => {
 
     expect(updater.getUpdateState()).toMatchObject({
       status: 'disabled',
-      isChecking: false,
       disabledReason: 'development',
     });
     expect(mocks.autoUpdater.checkForUpdates).not.toHaveBeenCalled();
@@ -114,13 +113,12 @@ describe('auto updater', () => {
     expect(mocks.autoUpdater.checkForUpdates).toHaveBeenCalledOnce();
 
     mocks.autoUpdater.emit('checking-for-update');
-    expect(updater.getUpdateState()).toMatchObject({ status: 'checking', isChecking: true });
+    expect(updater.getUpdateState()).toMatchObject({ status: 'checking' });
 
     mocks.autoUpdater.emit('update-available', { version: '1.1.0' });
     expect(updater.getUpdateState()).toMatchObject({
       availableVersion: '1.1.0',
       status: 'downloading',
-      isDownloading: true,
     });
 
     mocks.autoUpdater.emit('download-progress', {
@@ -136,7 +134,6 @@ describe('auto updater', () => {
     mocks.autoUpdater.emit('update-downloaded', { version: '1.1.0' });
     expect(updater.getUpdateState()).toMatchObject({
       status: 'ready',
-      isDownloaded: true,
       downloadPercent: 100,
     });
   });
@@ -162,8 +159,6 @@ describe('auto updater', () => {
 
     expect(updater.getUpdateState()).toMatchObject({
       status: 'error',
-      isChecking: false,
-      isDownloading: false,
       availableVersion: null,
     });
   });
@@ -177,8 +172,6 @@ describe('auto updater', () => {
 
     expect(updater.getUpdateState()).toMatchObject({
       status: 'error',
-      isChecking: false,
-      isDownloading: false,
       availableVersion: '1.1.0',
     });
   });

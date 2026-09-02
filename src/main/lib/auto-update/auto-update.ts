@@ -12,9 +12,6 @@ let updaterState: UpdaterState = {
   currentVersion: app.getVersion(),
   availableVersion: null,
   status: 'idle',
-  isChecking: false,
-  isDownloading: false,
-  isDownloaded: false,
   downloadPercent: 0,
   disabledReason: null,
 };
@@ -55,8 +52,6 @@ const setUpdaterState = (patch: Partial<UpdaterState>): void => {
 const handleUpdaterError = (error: unknown): void => {
   setUpdaterState({
     status: 'error',
-    isChecking: false,
-    isDownloading: false,
   });
   console.error('[updater] Update operation failed.', error);
 };
@@ -65,9 +60,6 @@ const runUpdateCheck = async (): Promise<UpdaterState> => {
   setUpdaterState({
     availableVersion: null,
     status: 'checking',
-    isChecking: true,
-    isDownloading: false,
-    isDownloaded: false,
     downloadPercent: 0,
   });
 
@@ -114,9 +106,6 @@ const setDisabledState = (reason: UpdaterDisabledReason): void => {
   setUpdaterState({
     availableVersion: null,
     status: 'disabled',
-    isChecking: false,
-    isDownloading: false,
-    isDownloaded: false,
     downloadPercent: 0,
     disabledReason: reason,
   });
@@ -131,7 +120,7 @@ export const checkForUpdatesManually = async (): Promise<UpdaterState> => {
 };
 
 export const quitAndInstallUpdate = (): boolean => {
-  if (!updaterState.isDownloaded) {
+  if (updaterState.status !== 'ready') {
     return false;
   }
 
@@ -168,9 +157,6 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
     setUpdaterState({
       availableVersion: null,
       status: 'checking',
-      isChecking: true,
-      isDownloading: false,
-      isDownloaded: false,
       downloadPercent: 0,
     });
     console.info('[updater] Checking for updates...');
@@ -180,9 +166,6 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
     setUpdaterState({
       availableVersion: info.version,
       status: 'downloading',
-      isChecking: false,
-      isDownloading: true,
-      isDownloaded: false,
       downloadPercent: 0,
     });
     console.info(`[updater] Update available: v${info.version}`);
@@ -192,9 +175,6 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
     setUpdaterState({
       availableVersion: null,
       status: 'up-to-date',
-      isChecking: false,
-      isDownloading: false,
-      isDownloaded: false,
       downloadPercent: 0,
     });
     console.info(`[updater] No updates found. Current latest: v${info.version}`);
@@ -203,9 +183,6 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
   autoUpdater.on('download-progress', (progress) => {
     setUpdaterState({
       status: 'downloading',
-      isChecking: false,
-      isDownloading: true,
-      isDownloaded: false,
       downloadPercent: progress.percent,
     });
     console.info(
@@ -217,9 +194,6 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
     setUpdaterState({
       availableVersion: info.version,
       status: 'ready',
-      isChecking: false,
-      isDownloading: false,
-      isDownloaded: true,
       downloadPercent: 100,
     });
     void showUpdateDownloadedDialog(updaterMainWindow);

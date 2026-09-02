@@ -13,9 +13,6 @@ export interface UpdaterState {
   currentVersion: string;
   availableVersion: string | null;
   status: UpdaterStatus;
-  isChecking: boolean;
-  isDownloading: boolean;
-  isDownloaded: boolean;
   downloadPercent: number;
   disabledReason: UpdaterDisabledReason | null;
 }

@@ -49,8 +49,8 @@ export const AppUpdateInfo = (): React.ReactNode => {
   const errorMessage = getUpdaterAlertMessage(updaterState, Boolean(queryError));
   const isCheckButtonDisabled =
     !updaterState ||
-    updaterState.isChecking ||
-    updaterState.isDownloading ||
+    updaterState.status === 'checking' ||
+    updaterState.status === 'downloading' ||
     updaterState.status === 'disabled';
 
   return (
@@ -73,7 +73,7 @@ export const AppUpdateInfo = (): React.ReactNode => {
         </Badge>
       </div>
 
-      {updaterState?.isDownloading ? (
+      {updaterState?.status === 'downloading' ? (
         <div className="flex flex-col gap-1">
           <Progress value={updaterState.downloadPercent} />
           <span className="text-muted-foreground text-right text-xs">
@@ -95,7 +95,7 @@ export const AppUpdateInfo = (): React.ReactNode => {
         </Button>
         <Button
           variant="secondary"
-          disabled={!updaterState?.isDownloaded}
+          disabled={updaterState?.status !== 'ready'}
           onClick={restartToUpdate}
         >
           Restart to update
