@@ -36,3 +36,14 @@ export const getMainWindow = (): BrowserWindow => {
 
   return mainWindow;
 };
+
+export const showMainWindow = (): void => {
+  const window = getMainWindow();
+
+  if (window.isMinimized()) {
+    window.restore();
+  }
+
+  window.show();
+  window.focus();
+};

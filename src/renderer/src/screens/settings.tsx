@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppInfo } from '../features/settings/ui/app-info';
 import { AppUpdateInfo } from '../features/settings/ui/app-update-info';
 import { AutoLaunchSetting } from '../features/settings/ui/auto-launch-setting';
+import { MinimizeToTraySetting } from '../features/settings/ui/minimize-to-tray-setting';
 import { APP_ROUTES } from '../shared/routes';
 import { Button } from '../shared/ui/button';
 
@@ -34,6 +35,7 @@ export const SettingsScreen = (): React.ReactNode => {
           <AppUpdateInfo />
         </div>
         <AutoLaunchSetting />
+        <MinimizeToTraySetting />
       </div>
     </section>
   );

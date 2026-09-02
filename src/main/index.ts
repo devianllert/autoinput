@@ -1,12 +1,13 @@
 import { registerIpcMain } from '@egoist/tipc/main';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
 
 import { registerHotkeys } from './hotkeys/hotkeys';
 import { router } from './ipc/router';
 import { accessibilityPermission } from './lib/accessibility/accessibility-permission';
 import { autoUpdate } from './lib/auto-update';
-import { createMainWindow } from './windows/main';
+import { minimizeToTray } from './lib/minimize-to-tray';
+import { createMainWindow, showMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
 
@@ -24,9 +25,7 @@ const bootstrap = async () => {
   });
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+    showMainWindow();
   });
 
   app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -40,6 +39,7 @@ const bootstrap = async () => {
   });
 
   registerIpcMain(router);
+  await minimizeToTray.setup(showMainWindow);
   const mainWindow = createMainWindow();
   autoUpdate.setup(mainWindow);
 
