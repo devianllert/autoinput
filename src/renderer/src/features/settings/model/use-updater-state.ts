@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { UpdaterState } from '@/main/lib/auto-update';
 import { ipcActions, ipcListeners } from '@/renderer/shared/api/ipc-client';
@@ -12,6 +12,21 @@ export const useUpdaterState = () => {
     queryKey: UPDATER_QUERY_KEY,
     queryFn: () => ipcActions.getUpdateState(),
   });
+  const checkMutation = useMutation({
+    mutationFn: () => ipcActions.checkForUpdates(),
+    onSuccess: (state) => {
+      queryClient.setQueryData(UPDATER_QUERY_KEY, state);
+    },
+  });
+  const restartMutation = useMutation({
+    mutationFn: async () => {
+      const result = await ipcActions.restartToUpdate();
+
+      if (!result.success) {
+        throw new Error('Updater rejected the restart request.');
+      }
+    },
+  });
 
   useEffect(() => {
     const unsubscribe = ipcListeners.updateStateChanged.listen((state: UpdaterState) => {
@@ -21,19 +36,23 @@ export const useUpdaterState = () => {
     return () => unsubscribe();
   }, [queryClient]);
 
-  const checkForUpdates = async (): Promise<void> => {
-    const state = await ipcActions.checkForUpdates();
-    queryClient.setQueryData(UPDATER_QUERY_KEY, state);
+  const checkForUpdates = (): void => {
+    restartMutation.reset();
+    checkMutation.mutate();
   };
 
-  const restartToUpdate = async (): Promise<boolean> => {
-    const result = await ipcActions.restartToUpdate();
-    return result.success;
+  const restartToUpdate = (): void => {
+    checkMutation.reset();
+    restartMutation.mutate();
   };
 
   return {
     updaterState: query.data,
     queryError: query.error,
+    checkError: checkMutation.error,
+    restartError: restartMutation.error,
+    isCheckPending: checkMutation.isPending,
+    isRestartPending: restartMutation.isPending,
     checkForUpdates,
     restartToUpdate,
   };

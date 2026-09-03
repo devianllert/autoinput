@@ -10,6 +10,7 @@ import { useUpdaterState } from '../model/use-updater-state';
 
 const UPDATE_CHECK_ERROR_MESSAGE = 'Failed to check for updates. Please try again later.';
 const UPDATE_DOWNLOAD_ERROR_MESSAGE = 'Failed to download the update. Please try again later.';
+const UPDATE_RESTART_ERROR_MESSAGE = 'Failed to restart and install the update. Please try again.';
 const UPDATE_STATE_ERROR_MESSAGE = 'Failed to load update information. Please try again later.';
 
 const DISABLED_REASON_MESSAGES: Record<UpdaterDisabledReason, string> = {
@@ -30,8 +31,12 @@ const STATUS_LABELS: Record<UpdaterStatus, string> = {
 const getUpdaterAlertMessage = (
   updaterState: UpdaterState | undefined,
   hasQueryError: boolean,
+  hasCheckError: boolean,
+  hasRestartError: boolean,
 ): string | null => {
   if (hasQueryError) return UPDATE_STATE_ERROR_MESSAGE;
+  if (hasCheckError) return UPDATE_CHECK_ERROR_MESSAGE;
+  if (hasRestartError) return UPDATE_RESTART_ERROR_MESSAGE;
   if (!updaterState) return null;
 
   if (updaterState.status === 'error') {
@@ -44,11 +49,27 @@ const getUpdaterAlertMessage = (
 };
 
 export const AppUpdateInfo = (): React.ReactNode => {
-  const { updaterState, queryError, checkForUpdates, restartToUpdate } = useUpdaterState();
+  const {
+    updaterState,
+    queryError,
+    checkError,
+    restartError,
+    isCheckPending,
+    isRestartPending,
+    checkForUpdates,
+    restartToUpdate,
+  } = useUpdaterState();
   const isUpToDate = updaterState?.status === 'up-to-date';
-  const errorMessage = getUpdaterAlertMessage(updaterState, Boolean(queryError));
+  const isActionPending = isCheckPending || isRestartPending;
+  const errorMessage = getUpdaterAlertMessage(
+    updaterState,
+    Boolean(queryError),
+    Boolean(checkError),
+    Boolean(restartError),
+  );
   const isCheckButtonDisabled =
     !updaterState ||
+    isActionPending ||
     updaterState.status === 'checking' ||
     updaterState.status === 'downloading' ||
     updaterState.status === 'disabled';
@@ -91,14 +112,14 @@ export const AppUpdateInfo = (): React.ReactNode => {
 
       <div className="flex items-center gap-2">
         <Button disabled={isCheckButtonDisabled} onClick={checkForUpdates}>
-          Check update
+          {isCheckPending ? 'Checking...' : 'Check update'}
         </Button>
         <Button
           variant="secondary"
-          disabled={updaterState?.status !== 'ready'}
+          disabled={isActionPending || updaterState?.status !== 'ready'}
           onClick={restartToUpdate}
         >
-          Restart to update
+          {isRestartPending ? 'Restarting...' : 'Restart to update'}
         </Button>
       </div>
     </div>
