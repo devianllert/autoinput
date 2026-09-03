@@ -7,7 +7,7 @@ export type UpdaterStatus =
   | 'ready'
   | 'error';
 
-export type UpdaterDisabledReason = 'development' | 'portable';
+export type UpdaterDisabledReason = 'development' | 'portable' | 'unsupported-platform';
 
 export interface UpdaterState {
   currentVersion: string;

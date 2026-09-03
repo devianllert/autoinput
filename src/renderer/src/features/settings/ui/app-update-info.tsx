@@ -16,6 +16,7 @@ const UPDATE_STATE_ERROR_MESSAGE = 'Failed to load update information. Please tr
 const DISABLED_REASON_MESSAGES: Record<UpdaterDisabledReason, string> = {
   development: 'Updater is disabled in development mode.',
   portable: 'Automatic updates are unavailable in the portable build.',
+  'unsupported-platform': 'Automatic updates are currently available only on Windows.',
 };
 
 const STATUS_LABELS: Record<UpdaterStatus, string> = {

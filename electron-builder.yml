@@ -24,6 +24,9 @@ nsis:
 portable:
   artifactName: ${name}-${version}-portable.${ext}
 mac:
+  # Squirrel.Mac auto-update stays disabled until releases use a stable Developer ID signature.
+  target:
+    - dmg
   # Keep the Electron bundle internally consistent without requiring a paid
   # Developer ID certificate. Gatekeeper will still require user approval.
   identity: '-'

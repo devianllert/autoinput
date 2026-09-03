@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const listeners = new Map<string, Array<(...args: unknown[]) => void>>();
@@ -59,16 +59,25 @@ vi.mock('../../../ipc/listeners', () => ({
 type AutoUpdateModule = typeof import('../auto-update');
 
 let updater: AutoUpdateModule;
+let mockedPlatform: NodeJS.Platform;
 
 beforeEach(async () => {
+  vi.restoreAllMocks();
   vi.resetModules();
   mocks.app.isPackaged = true;
   mocks.autoUpdater.reset();
   mocks.dialog.showMessageBox.mockClear();
   mocks.dialog.showMessageBox.mockResolvedValue({ response: 1 });
   vi.unstubAllEnvs();
-  delete process.env['PORTABLE_EXECUTABLE_FILE'];
+  vi.stubEnv('PORTABLE_EXECUTABLE_FILE', '');
+  mockedPlatform = 'win32';
+  vi.spyOn(process, 'platform', 'get').mockImplementation(() => mockedPlatform);
   updater = await import('../auto-update');
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe('auto updater', () => {
@@ -86,7 +95,7 @@ describe('auto updater', () => {
   });
 
   it('does not start in a portable Windows build', () => {
-    process.env['PORTABLE_EXECUTABLE_FILE'] = 'C:\\Tools\\autoinput.exe';
+    vi.stubEnv('PORTABLE_EXECUTABLE_FILE', 'C:\\Tools\\autoinput.exe');
 
     updater.setupAutoUpdater(null);
 
@@ -94,14 +103,18 @@ describe('auto updater', () => {
     expect(mocks.autoUpdater.checkForUpdates).not.toHaveBeenCalled();
   });
 
-  it('starts in a packaged macOS build', () => {
-    const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin');
+  it('stays disabled in a packaged macOS build even when the dev updater flag is set', () => {
+    mockedPlatform = 'darwin';
+    vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
 
     updater.setupAutoUpdater(null);
 
-    expect(updater.getUpdateState()).toMatchObject({ status: 'checking' });
-    expect(mocks.autoUpdater.checkForUpdates).toHaveBeenCalledOnce();
-    platformSpy.mockRestore();
+    expect(updater.getUpdateState()).toMatchObject({
+      status: 'disabled',
+      disabledReason: 'unsupported-platform',
+    });
+    expect(mocks.autoUpdater.checkForUpdates).not.toHaveBeenCalled();
+    expect(mocks.autoUpdater.on).not.toHaveBeenCalled();
   });
 
   it('checks at startup and tracks the download lifecycle', () => {

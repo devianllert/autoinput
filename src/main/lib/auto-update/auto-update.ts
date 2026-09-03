@@ -23,6 +23,8 @@ const isDevUpdaterEnabled = (): boolean => {
 };
 
 const getDisabledReason = (devUpdaterEnabled: boolean): UpdaterDisabledReason | null => {
+  // Keep auto-update Windows-only until macOS releases use a stable Developer ID signature.
+  if (process.platform !== 'win32') return 'unsupported-platform';
   if (devUpdaterEnabled) return null;
   if (!app.isPackaged) return 'development';
   if (process.env['PORTABLE_EXECUTABLE_FILE']) {
