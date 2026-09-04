@@ -7,6 +7,7 @@ import { router } from './ipc/router';
 import { accessibilityPermission } from './lib/accessibility/accessibility-permission';
 import { autoUpdate } from './lib/auto-update';
 import { minimizeToTray } from './lib/minimize-to-tray';
+import { appTray } from './lib/tray';
 import { createMainWindow, showMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
@@ -39,7 +40,8 @@ const bootstrap = async () => {
   });
 
   registerIpcMain(router);
-  await minimizeToTray.setup(showMainWindow);
+  appTray.setup(showMainWindow);
+  minimizeToTray.setup();
   createMainWindow();
   autoUpdate.setup();
 
