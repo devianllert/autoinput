@@ -84,7 +84,7 @@ describe('auto updater', () => {
   it('stays disabled during normal development', async () => {
     mocks.app.isPackaged = false;
 
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     expect(updater.getUpdateState()).toMatchObject({
       status: 'disabled',
@@ -97,7 +97,7 @@ describe('auto updater', () => {
   it('does not start in a portable Windows build', () => {
     vi.stubEnv('PORTABLE_EXECUTABLE_FILE', 'C:\\Tools\\autoinput.exe');
 
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     expect(updater.getUpdateState()).toMatchObject({ status: 'disabled' });
     expect(mocks.autoUpdater.checkForUpdates).not.toHaveBeenCalled();
@@ -107,7 +107,7 @@ describe('auto updater', () => {
     mockedPlatform = 'darwin';
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
 
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     expect(updater.getUpdateState()).toMatchObject({
       status: 'disabled',
@@ -119,7 +119,7 @@ describe('auto updater', () => {
 
   it('checks at startup and tracks the download lifecycle', () => {
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     expect(mocks.autoUpdater.autoDownload).toBe(true);
     expect(mocks.autoUpdater.autoInstallOnAppQuit).toBe(true);
@@ -153,7 +153,7 @@ describe('auto updater', () => {
 
   it('checks manually and installs only a downloaded update', async () => {
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     expect(updater.quitAndInstallUpdate()).toBe(false);
     await updater.checkForUpdatesManually();
@@ -166,7 +166,7 @@ describe('auto updater', () => {
 
   it('exposes a check failure without storing presentation text', () => {
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     mocks.autoUpdater.emit('error', new Error('network unavailable'));
 
@@ -178,7 +178,7 @@ describe('auto updater', () => {
 
   it('keeps the available version when downloading an update fails', () => {
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
     mocks.autoUpdater.emit('update-available', { version: '1.1.0' });
 
     mocks.autoUpdater.emit('error', new Error('socket closed'));
@@ -193,7 +193,7 @@ describe('auto updater', () => {
     mocks.autoUpdater.checkForUpdates.mockRejectedValueOnce(new Error('release unavailable'));
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
 
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     await vi.waitFor(() => {
       expect(updater.getUpdateState()).toMatchObject({
@@ -205,7 +205,7 @@ describe('auto updater', () => {
 
   it('returns a user-friendly state when a manual check rejects', async () => {
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
     mocks.autoUpdater.checkForUpdates.mockRejectedValueOnce(new Error('release unavailable'));
 
     await expect(updater.checkForUpdatesManually()).resolves.toMatchObject({
@@ -214,10 +214,43 @@ describe('auto updater', () => {
     });
   });
 
+  it('shows an unparented dialog when an update is downloaded', async () => {
+    vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
+    updater.setupAutoUpdater();
+
+    mocks.autoUpdater.emit('update-downloaded', { version: '1.1.0' });
+
+    await vi.waitFor(() => {
+      expect(mocks.dialog.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Update ready' }),
+      );
+    });
+  });
+
+  it('handles a rejected downloaded-update dialog', async () => {
+    const dialogError = new Error('dialog unavailable');
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.dialog.showMessageBox.mockRejectedValueOnce(dialogError);
+    vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
+    updater.setupAutoUpdater();
+
+    mocks.autoUpdater.emit('update-downloaded', { version: '1.1.0' });
+
+    await vi.waitFor(() => {
+      expect(mocks.dialog.showMessageBox).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Update ready' }),
+      );
+      expect(consoleError).toHaveBeenCalledWith(
+        '[updater] Failed to show the downloaded-update dialog.',
+        dialogError,
+      );
+    });
+  });
+
   it('installs from the downloaded-update dialog when confirmed', async () => {
     mocks.dialog.showMessageBox.mockResolvedValue({ response: 0 });
     vi.stubEnv('VITE_AUTOINPUT_ENABLE_DEV_UPDATER', '1');
-    updater.setupAutoUpdater(null);
+    updater.setupAutoUpdater();
 
     mocks.autoUpdater.emit('update-downloaded', { version: '1.1.0' });
     await vi.waitFor(() => expect(mocks.autoUpdater.quitAndInstall).toHaveBeenCalledOnce());

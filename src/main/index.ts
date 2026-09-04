@@ -40,8 +40,8 @@ const bootstrap = async () => {
 
   registerIpcMain(router);
   await minimizeToTray.setup(showMainWindow);
-  const mainWindow = createMainWindow();
-  autoUpdate.setup(mainWindow);
+  createMainWindow();
+  autoUpdate.setup();
 
   const accessibilityPermissionState = accessibilityPermission.check();
 

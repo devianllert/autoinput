@@ -30,7 +30,7 @@ export const createMainWindow = (): BrowserWindow => {
 };
 
 export const getMainWindow = (): BrowserWindow => {
-  if (!mainWindow) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
     return createMainWindow();
   }
 

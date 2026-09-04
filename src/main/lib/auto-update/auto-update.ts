@@ -5,7 +5,6 @@ import { getHandlers } from '../../ipc/listeners';
 import type { UpdaterDisabledReason, UpdaterState } from './types';
 
 let hasUpdaterSetup = false;
-let updaterMainWindow: BrowserWindow | null = null;
 let updaterEnabled = false;
 
 let updaterState: UpdaterState = {
@@ -76,7 +75,7 @@ const runUpdateCheck = async (): Promise<UpdaterState> => {
   return getUpdateState();
 };
 
-const showUpdateDownloadedDialog = async (mainWindow: BrowserWindow | null): Promise<void> => {
+const showUpdateDownloadedDialog = async (): Promise<void> => {
   const messageBoxOptions: MessageBoxOptions = {
     type: 'info',
     title: 'Update ready',
@@ -87,12 +86,14 @@ const showUpdateDownloadedDialog = async (mainWindow: BrowserWindow | null): Pro
     cancelId: 1,
   };
 
-  const result = mainWindow
-    ? await dialog.showMessageBox(mainWindow, messageBoxOptions)
-    : await dialog.showMessageBox(messageBoxOptions);
+  try {
+    const result = await dialog.showMessageBox(messageBoxOptions);
 
-  if (result.response === 0) {
-    quitAndInstallUpdate();
+    if (result.response === 0) {
+      quitAndInstallUpdate();
+    }
+  } catch (error) {
+    console.error('[updater] Failed to show the downloaded-update dialog.', error);
   }
 };
 
@@ -130,9 +131,7 @@ export const quitAndInstallUpdate = (): boolean => {
   return true;
 };
 
-export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
-  updaterMainWindow = mainWindow;
-
+export const setupAutoUpdater = (): void => {
   if (hasUpdaterSetup) {
     return;
   }
@@ -198,7 +197,7 @@ export const setupAutoUpdater = (mainWindow: BrowserWindow | null): void => {
       status: 'ready',
       downloadPercent: 100,
     });
-    void showUpdateDownloadedDialog(updaterMainWindow);
+    void showUpdateDownloadedDialog();
   });
 
   autoUpdater.on('error', handleUpdaterError);
