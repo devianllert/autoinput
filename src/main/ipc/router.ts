@@ -1,5 +1,4 @@
 import { autoUpdate } from '../lib/auto-update';
-import { minimizeToTray } from '../lib/minimize-to-tray';
 import { clickerRouter } from './actions/clicker';
 import { permissionsRouter } from './actions/permissions';
 import { settingsRouter } from './actions/settings';
@@ -15,7 +14,6 @@ export const router = {
   ...permissionsRouter,
   ...settingsRouter,
   ...autoUpdate.ipc,
-  ...minimizeToTray.ipc,
 };
 
 export type IPCRouter = typeof router;

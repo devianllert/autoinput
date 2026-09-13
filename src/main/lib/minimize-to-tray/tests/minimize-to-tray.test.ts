@@ -7,21 +7,6 @@ const mocks = vi.hoisted(() => ({
   enabled: false,
 }));
 
-vi.mock('@egoist/tipc/main', () => {
-  const action = (handler: unknown) => handler;
-
-  return {
-    tipc: {
-      create: () => ({
-        procedure: {
-          action,
-          input: () => ({ action }),
-        },
-      }),
-    },
-  };
-});
-
 vi.mock('electron', () => ({
   app: {
     on: vi.fn((event: string, listener: AppListener) => {

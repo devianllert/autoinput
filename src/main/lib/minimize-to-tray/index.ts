@@ -1,11 +1,9 @@
-import { tipc } from '@egoist/tipc/main';
 import { app, type BrowserWindow } from 'electron';
 
 import type { MinimizeToTrayState } from '@/shared/settings/types';
 
 import { getMinimizeToTrayEnabled, setMinimizeToTrayEnabled } from './store';
 
-const t = tipc.create();
 let hasRegisteredLifecycle = false;
 let isApplicationQuitting = false;
 
@@ -25,17 +23,7 @@ const bindWindow = (window: BrowserWindow): void => {
   });
 };
 
-const ipc = {
-  getMinimizeToTrayState: t.procedure.action(async () => {
-    return Promise.resolve(getState());
-  }),
-  updateMinimizeToTray: t.procedure.input<boolean>().action(async ({ input }) => {
-    return Promise.resolve(update(input));
-  }),
-};
-
 export const minimizeToTray = {
-  ipc,
   getState,
   update,
   setup: (): void => {
