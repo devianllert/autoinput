@@ -10,12 +10,11 @@ export const registerHotkeys = (): Hotkeys => {
   const savedHotkeys = getHotkeys();
 
   savedHotkeys.forEach((hotkey) => {
-    const defaultHotkey = defaultHotkeyList.find(
-      (h) => h.name === hotkey.name,
-    ) as HotkeyRegistration;
+    const defaultHotkey = defaultHotkeyList.find((h) => h.name === hotkey.name);
 
     if (!defaultHotkey) {
-      throw new Error(`Hotkey ${hotkey.name} not found`);
+      console.warn(`Hotkey ${hotkey.name} not found in default hotkey list`);
+      return;
     }
 
     const hotkeyRegistration: HotkeyRegistration = {
