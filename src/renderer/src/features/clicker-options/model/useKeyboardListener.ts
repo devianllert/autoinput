@@ -15,6 +15,8 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
   const [pressedKeys, setPressedKeys] = useState<RecordedInputCode[]>([]);
   const [recordedKeys, setRecordedKeys] = useState<RecordedInputCode[] | null>(null);
   const onRecordRef = useRef(onRecord);
+  /** Attach to the Edit/Cancel button: mouse events inside it are not recorded. */
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     onRecordRef.current = onRecord;
@@ -41,7 +43,14 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
       event.stopPropagation();
     };
 
+    const isIgnoredMouseEvent = (event: KeyboardEvent | MouseEvent): boolean =>
+      event instanceof MouseEvent &&
+      event.target instanceof Node &&
+      cancelButtonRef.current?.contains(event.target) === true;
+
     const handleDown = (event: KeyboardEvent | MouseEvent) => {
+      if (isIgnoredMouseEvent(event)) return;
+
       prevent(event);
 
       if (event instanceof KeyboardEvent && event.code === 'Escape') {
@@ -55,6 +64,8 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
     };
 
     const handleUp = (event: KeyboardEvent | MouseEvent) => {
+      if (isIgnoredMouseEvent(event)) return;
+
       prevent(event);
 
       if (cancelled || (event instanceof KeyboardEvent && event.code === 'Escape')) {
@@ -94,5 +105,6 @@ export const useKeyboardListener = ({ onRecord }: UseKeyboardListenerProps) => {
     isListening,
     pressedKeys,
     recordedKeys,
+    cancelButtonRef,
   };
 };

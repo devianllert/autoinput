@@ -43,7 +43,7 @@ export const InputEditor = () => {
     },
   });
 
-  const { listen, stop, isListening, pressedKeys } = useKeyboardListener({
+  const { listen, stop, isListening, pressedKeys, cancelButtonRef } = useKeyboardListener({
     onRecord: (recordedCodes) => {
       const keys = recordedCodesToClickerKeys(recordedCodes);
 
@@ -96,7 +96,11 @@ export const InputEditor = () => {
         <ButtonGroup className="w-full">
           <Input readOnly value={inputLabel} />
 
-          <Button variant="outline" onClick={() => (isListening ? stop() : listen())}>
+          <Button
+            ref={cancelButtonRef}
+            variant="outline"
+            onClick={() => (isListening ? stop() : listen())}
+          >
             {isListening ? 'Cancel' : 'Edit'}
           </Button>
         </ButtonGroup>

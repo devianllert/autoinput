@@ -40,7 +40,7 @@ export const HotkeyEditor = () => {
     },
   });
 
-  const { listen, stop, isListening, pressedKeys } = useKeyboardListener({
+  const { listen, stop, isListening, pressedKeys, cancelButtonRef } = useKeyboardListener({
     onRecord: (recordedCodes) => {
       const keys = recordedInputCodesToUiohookCodes(recordedCodes);
 
@@ -96,7 +96,11 @@ export const HotkeyEditor = () => {
         <ButtonGroup className="w-full">
           <Input readOnly value={hotkeyLabel} />
 
-          <Button variant="outline" onClick={() => (isListening ? stop() : listen())}>
+          <Button
+            ref={cancelButtonRef}
+            variant="outline"
+            onClick={() => (isListening ? stop() : listen())}
+          >
             {isListening ? 'Cancel' : 'Edit'}
           </Button>
         </ButtonGroup>
