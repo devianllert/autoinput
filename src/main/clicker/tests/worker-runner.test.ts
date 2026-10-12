@@ -40,10 +40,22 @@ vi.mock('../../ipc/listeners', () => ({
 
 vi.mock('../../lib/enhanced-worker', () => ({
   enhancedWorker: vi.fn((_factory, options: WorkerCallbacks) => {
-    workerCallbacks.push(options);
+    let resolveExited = (): void => undefined;
+    const exited = new Promise<void>((resolve) => {
+      resolveExited = resolve;
+    });
+
+    workerCallbacks.push({
+      ...options,
+      onFinish: (exitCode) => {
+        options.onFinish?.(exitCode);
+        resolveExited();
+      },
+    });
 
     return {
       postMessage,
+      exited,
     };
   }),
 }));
@@ -70,9 +82,7 @@ vi.mock('../../lib/window-target/windows', () => ({
 }));
 
 vi.mock('../../windows/main', () => ({
-  getMainWindow: vi.fn(() => ({
-    isDestroyed: () => true,
-  })),
+  findMainWindow: vi.fn(() => null),
 }));
 
 describe('ClickerRunner', () => {
@@ -103,41 +113,97 @@ describe('ClickerRunner', () => {
     vi.useRealTimers();
   });
 
-  it('sends stop even when stop is called before the worker finishes starting', () => {
+  const startMessage = { type: 'start', intervalMs: 50, config: { keys: [1], mode: 'press' } };
+
+  it('posts start and stop to the worker and tracks running state', () => {
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+    expect(runner.isRunning).toBe(true);
+
+    runner.stop();
+
+    expect(runner.isRunning).toBe(false);
+    expect(postMessage.mock.calls).toEqual([[startMessage], [{ type: 'stop' }]]);
+  });
+
+  it('reuses one worker and keeps every message of a rapid on/off sequence in order', () => {
     const runner = new ClickerRunner();
 
     runner.start(20);
     runner.stop();
+    runner.start(20);
+    runner.stop();
+    runner.start(20);
 
-    expect(runner.isRunning).toBe(false);
-    expect(postMessage).toHaveBeenCalledWith('stop');
+    expect(workerCallbacks).toHaveLength(1);
+    expect(runner.isRunning).toBe(true);
+    expect(postMessage.mock.calls).toEqual([
+      [startMessage],
+      [{ type: 'stop' }],
+      [startMessage],
+      [{ type: 'stop' }],
+      [startMessage],
+    ]);
   });
 
-  it('does not spawn a second worker while the first is still starting', () => {
+  it('ignores start while already running', () => {
     const runner = new ClickerRunner();
 
     runner.start(20);
     runner.start(30);
 
-    expect(workerCallbacks).toHaveLength(1);
+    expect(postMessage).toHaveBeenCalledOnce();
   });
 
-  it('marks running as soon as start is called', () => {
+  it('blocks display sleep only while running', () => {
     const runner = new ClickerRunner();
 
     runner.start(20);
-
-    expect(runner.isRunning).toBe(true);
-  });
-
-  it('blocks display sleep only while the worker is running', () => {
-    const runner = new ClickerRunner();
-
-    runner.start(20);
-    workerCallbacks[0]?.onFinish?.(0);
+    runner.stop();
 
     expect(powerSaveBlockerStart).toHaveBeenCalledWith('prevent-display-sleep');
     expect(powerSaveBlockerStop).toHaveBeenCalledWith(1);
+  });
+
+  it('resets state and recreates the worker after a crash', () => {
+    const runner = new ClickerRunner();
+
+    runner.start(20);
+    workerCallbacks[0]?.onFinish?.(1);
+
+    expect(runner.isRunning).toBe(false);
+    expect(runner.hasWorker).toBe(false);
+    expect(powerSaveBlockerStop).toHaveBeenCalledOnce();
+
+    runner.start(20);
+
+    expect(workerCallbacks).toHaveLength(2);
+    expect(runner.isRunning).toBe(true);
+  });
+
+  it('resolves shutdown only after the worker exits and refuses to start afterwards', async () => {
+    const runner = new ClickerRunner();
+    const onShutdown = vi.fn();
+
+    runner.start(20);
+    const shutdown = runner.shutdown().then(onShutdown);
+    await Promise.resolve();
+
+    expect(runner.isRunning).toBe(false);
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'shutdown' });
+    expect(onShutdown).not.toHaveBeenCalled();
+
+    workerCallbacks[0]?.onFinish?.(0);
+    await shutdown;
+
+    expect(onShutdown).toHaveBeenCalledOnce();
+    expect(runner.hasWorker).toBe(false);
+
+    runner.start(20);
+
+    expect(workerCallbacks).toHaveLength(1);
+    expect(runner.isRunning).toBe(false);
   });
 
   it('does not start when a selected target does not match the active window', () => {
@@ -163,7 +229,7 @@ describe('ClickerRunner', () => {
     runner.applyWindowTargetConfig();
 
     expect(runner.isRunning).toBe(false);
-    expect(postMessage).toHaveBeenCalledWith('stop');
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'stop' });
   });
 
   it('stops when the active window changes to a different target', () => {
@@ -177,6 +243,6 @@ describe('ClickerRunner', () => {
     vi.advanceTimersByTime(250);
 
     expect(runner.isRunning).toBe(false);
-    expect(postMessage).toHaveBeenCalledWith('stop');
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'stop' });
   });
 });

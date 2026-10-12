@@ -2,6 +2,7 @@ import { registerIpcMain } from '@egoist/tipc/main';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { app } from 'electron';
 
+import { autoClicker } from './clicker/worker-runner';
 import { registerHotkeys } from './hotkeys/hotkeys';
 import { router } from './ipc/router';
 import { accessibilityPermission } from './lib/accessibility/accessibility-permission';
@@ -37,6 +38,14 @@ const bootstrap = async () => {
     if (process.platform !== 'darwin') {
       app.quit();
     }
+  });
+
+  // Let the worker release held keys/buttons before the process exits.
+  app.on('before-quit', (event) => {
+    if (!autoClicker.hasWorker) return;
+
+    event.preventDefault();
+    void autoClicker.shutdown().then(() => app.quit());
   });
 
   registerIpcMain(router);

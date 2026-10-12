@@ -4,30 +4,42 @@ import { getHandlers } from '../ipc/listeners';
 import { enhancedWorker } from '../lib/enhanced-worker';
 import { PowerSaveBlocker } from '../lib/power-save-blocker';
 import { disableHighResolutionTimer, enableHighResolutionTimer } from '../lib/timer-resolution';
-import { getMainWindow } from '../windows/main';
+import { findMainWindow } from '../windows/main';
 import { getClickerConfig, getWindowTargetConfig } from './store';
 import { WindowTargetGuard } from './window-target-guard';
+import type { ClickerWorkerMessage } from './worker-protocol';
 import clickerWorker from './worker?nodeWorker';
 
-const notifyRenderer = (isRunning: boolean): void => {
-  const window = getMainWindow();
+type ClickerWorker = ReturnType<typeof enhancedWorker>;
 
-  if (window.isDestroyed()) {
+const notifyRenderer = (isRunning: boolean): void => {
+  const window = findMainWindow();
+
+  if (!window) {
     return;
   }
 
   getHandlers(window.webContents).clickerStateChanged.send(isRunning);
 };
 
+/**
+ * Drives a single long-lived clicker worker via ordered start/stop messages.
+ * The worker is never terminated mid-click, so held input is always released by the worker itself.
+ */
 export class ClickerRunner {
   public isRunning = false;
 
-  private worker: ReturnType<typeof enhancedWorker> | null = null;
+  private worker: ClickerWorker | null = null;
+  private isShuttingDown = false;
   private readonly powerSaveBlocker = new PowerSaveBlocker();
   private readonly windowTargetGuard = new WindowTargetGuard();
 
+  public get hasWorker(): boolean {
+    return this.worker !== null;
+  }
+
   public start(cps: number): void {
-    if (this.worker || !Number.isFinite(cps) || cps <= 0) {
+    if (this.isRunning || this.isShuttingDown || !Number.isFinite(cps) || cps <= 0) {
       return;
     }
 
@@ -50,40 +62,50 @@ export class ClickerRunner {
       console.log('[clicker] Windows timer resolution set to 1ms');
     }
 
-    this.worker = enhancedWorker(clickerWorker, {
-      data: {
-        intervalMs: 1000 / cps,
-        config: getClickerConfig(),
-      },
-      onMessage: (message: unknown) => {
-        if (message === 'stopped') {
-          this.worker?.terminate();
-          this.worker = null;
-        }
-      },
+    this.worker ??= enhancedWorker(clickerWorker, {
       onError: (error) => {
         console.error(`[clicker-worker] ${error.message}`);
       },
       onFinish: () => {
-        this.windowTargetGuard.stop();
-        disableHighResolutionTimer();
-        this.powerSaveBlocker.stop();
-        this.isRunning = false;
+        // Exited on shutdown or crashed; after a crash the next start creates a new worker.
         this.worker = null;
-        notifyRenderer(false);
+        this.stop();
       },
     });
+
+    this.worker.postMessage({
+      type: 'start',
+      intervalMs: 1000 / cps,
+      config: getClickerConfig(),
+    } satisfies ClickerWorkerMessage);
   }
 
+  /** The single place that ends a run: resets state, frees resources, tells the worker to stop. */
   public stop(): void {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.isRunning = false;
+    this.windowTargetGuard.stop();
+    disableHighResolutionTimer();
+    this.powerSaveBlocker.stop();
+    notifyRenderer(false);
+    // The worker is already gone when this runs because it crashed.
+    this.worker?.postMessage({ type: 'stop' } satisfies ClickerWorkerMessage);
+  }
+
+  /** Stops the clicker and resolves once the worker has released held input and exited. */
+  public async shutdown(): Promise<void> {
+    this.isShuttingDown = true;
+    this.stop();
+
     if (!this.worker) {
       return;
     }
 
-    this.windowTargetGuard.stop();
-    this.isRunning = false;
-    notifyRenderer(false);
-    this.worker.postMessage('stop');
+    this.worker.postMessage({ type: 'shutdown' } satisfies ClickerWorkerMessage);
+    await this.worker.exited;
   }
 
   public applyWindowTargetConfig(config: WindowTargetConfig = getWindowTargetConfig()): void {

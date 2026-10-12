@@ -47,7 +47,13 @@ export const enhancedWorker = <TMessage = unknown, TData = unknown>(
   worker.on('exit', onFinish);
   worker.on('online', onOnline);
 
+  /** Resolves when the worker thread has exited, for any reason. */
+  const exited = new Promise<void>((resolve) => {
+    worker?.once('exit', () => resolve());
+  });
+
   return {
+    exited,
     threadId: worker?.threadId,
     _worker: worker,
     postMessage: (message: unknown) => worker?.postMessage(message),

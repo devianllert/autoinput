@@ -29,6 +29,15 @@ export const createMainWindow = (): BrowserWindow => {
   return mainWindow;
 };
 
+/** Returns the live main window without creating one. */
+export const findMainWindow = (): BrowserWindow | null => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return null;
+  }
+
+  return mainWindow;
+};
+
 export const getMainWindow = (): BrowserWindow => {
   if (!mainWindow || mainWindow.isDestroyed()) {
     return createMainWindow();
