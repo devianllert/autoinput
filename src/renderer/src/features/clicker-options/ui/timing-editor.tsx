@@ -19,23 +19,13 @@ import {
 } from '@/renderer/shared/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
 
-import { clampCps, MAX_CLICKS_PER_SECOND, MIN_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
-
-type TimingUnit = 'second' | 'minute' | 'hour';
-
-const UNIT_MULTIPLIERS: Record<TimingUnit, number> = {
-  second: 1,
-  minute: 60,
-  hour: 3600,
-};
-
-const cpsToDisplay = (cps: number, unit: TimingUnit) => cps * UNIT_MULTIPLIERS[unit];
-const displayToCps = (display: number, unit: TimingUnit) => display / UNIT_MULTIPLIERS[unit];
+import { clampCps, MAX_CLICKS_PER_SECOND } from '@/shared/clicker/limits';
+import { cpsToRate, formatRate, rateToCps, type RateUnit } from '@/shared/clicker/rate';
 
 export const TimingEditor = () => {
   const queryClient = useQueryClient();
 
-  const [rateUnit, setRateUnit] = useState<TimingUnit>('second');
+  const [rateUnit, setRateUnit] = useState<RateUnit>('second');
 
   const { data: timing } = useQuery({
     queryKey: ['clicker-timing'],
@@ -50,19 +40,28 @@ export const TimingEditor = () => {
   });
 
   const commitCps = (event: React.FocusEvent<HTMLInputElement>) => {
-    const displayCps = event.currentTarget.value;
-    const nextCps = clampCps(
-      displayCps.trim() === '' ? MIN_CLICKS_PER_SECOND : displayToCps(Number(displayCps), rateUnit),
-    );
+    if (!timing) return;
 
-    event.currentTarget.value = String(cpsToDisplay(nextCps, rateUnit));
+    const input = event.currentTarget;
+    const currentText = formatRate(cpsToRate(timing.cps, rateUnit));
+    const rate = Number(input.value);
 
-    if (nextCps !== timing?.cps) {
+    // Untouched, empty, or non-positive input: keep the saved rate.
+    if (input.value === currentText || input.value.trim() === '' || !(rate > 0)) {
+      input.value = currentText;
+      return;
+    }
+
+    const nextCps = clampCps(rateToCps(rate, rateUnit));
+
+    input.value = formatRate(cpsToRate(nextCps, rateUnit));
+
+    if (nextCps !== timing.cps) {
       updateTimingMutation.mutate({ cps: nextCps });
     }
   };
 
-  const handleRateUnitChange = (unit: TimingUnit) => {
+  const handleRateUnitChange = (unit: RateUnit) => {
     if (unit === rateUnit) return;
 
     setRateUnit(unit);
@@ -78,8 +77,8 @@ export const TimingEditor = () => {
           <TooltipContent>
             <div>
               <p>
-                The number of clicks per second, minute, or hour. Capped at {MAX_CLICKS_PER_SECOND}{' '}
-                clicks/s — the practical Windows limit.
+                The number of clicks per second, minute, or hour — from 1 click per hour up to{' '}
+                {MAX_CLICKS_PER_SECOND} clicks/s, the practical Windows limit.
               </p>
             </div>
           </TooltipContent>
@@ -93,7 +92,7 @@ export const TimingEditor = () => {
           <InputGroupInput
             key={`${rateUnit}:${timing?.cps ?? 'loading'}`}
             type="number"
-            defaultValue={timing ? cpsToDisplay(timing.cps, rateUnit) : ''}
+            defaultValue={timing ? formatRate(cpsToRate(timing.cps, rateUnit)) : ''}
             disabled={!timing}
             onBlur={commitCps}
             onKeyDown={(event) => {

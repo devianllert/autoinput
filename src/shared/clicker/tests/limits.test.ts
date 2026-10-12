@@ -20,6 +20,12 @@ describe('clampCps', () => {
     expect(clampCps(999)).toBe(MAX_CLICKS_PER_SECOND);
   });
 
+  it('keeps rates slower than one click per second, down to one per hour', () => {
+    expect(clampCps(10 / 60)).toBe(10 / 60);
+    expect(clampCps(1 / 3600)).toBe(1 / 3600);
+    expect(clampCps(1 / 7200)).toBe(MIN_CLICKS_PER_SECOND);
+  });
+
   it('falls back to the default for non-finite values', () => {
     expect(clampCps(Number.NaN)).toBe(DEFAULT_CLICKS_PER_SECOND);
     expect(clampCps(Number.POSITIVE_INFINITY)).toBe(DEFAULT_CLICKS_PER_SECOND);

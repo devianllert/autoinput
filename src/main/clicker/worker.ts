@@ -28,7 +28,7 @@ port.on('message', (message: ClickerWorkerMessage) => {
 
       clicker = createClicker(message.config.mode);
       clicker.start(message.intervalMs, message.config.keys);
-      console.log(`${WORKER_TAG} started (${(1000 / message.intervalMs).toFixed(0)} CPS target)`);
+      console.log(`${WORKER_TAG} started (one click every ${message.intervalMs.toFixed(1)} ms)`);
       return;
     }
     case 'stop':

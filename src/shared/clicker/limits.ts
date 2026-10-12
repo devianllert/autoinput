@@ -1,4 +1,5 @@
-export const MIN_CLICKS_PER_SECOND = 1;
+/** Slowest supported rate: one click per hour, so per-minute and per-hour rates stay usable. */
+export const MIN_CLICKS_PER_SECOND = 1 / 3600;
 
 /**
  * Highest useful click rate on Windows.
