@@ -9,6 +9,7 @@ import { accessibilityPermission } from './lib/accessibility/accessibility-permi
 import { autoUpdate } from './lib/auto-update';
 import { minimizeToTray } from './lib/minimize-to-tray';
 import { appTray } from './lib/tray';
+import { acquireSingleInstanceLock } from './lib/window/single-instance';
 import { createMainWindow, showMainWindow } from './windows/main';
 
 console.debug('userData:', app.getPath('userData'));
@@ -62,4 +63,9 @@ const bootstrap = async () => {
   }
 };
 
-void bootstrap();
+// A second copy would install its own global hook and click on the same hotkey.
+if (acquireSingleInstanceLock(showMainWindow)) {
+  void bootstrap();
+} else {
+  app.quit();
+}
