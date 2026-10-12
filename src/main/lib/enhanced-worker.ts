@@ -25,6 +25,8 @@ export const enhancedWorker = <TMessage = unknown, TData = unknown>(
     workerData: data,
   });
 
+  let terminated = false;
+
   const onMessage = (message: TMessage) => options.onMessage?.(message);
   const onError = (error: Error) => options.onError?.(error);
   const onFinish = (exitCode: number) => {
@@ -32,7 +34,10 @@ export const enhancedWorker = <TMessage = unknown, TData = unknown>(
     worker?.off('error', onError);
     worker?.off('exit', onFinish);
 
-    if (exitCode === 0) {
+    if (terminated) {
+      // `terminate()` always exits with a non-zero code; that is a requested stop, not a failure.
+      options.onCancel?.();
+    } else if (exitCode === 0) {
       options.onSuccess?.();
     } else {
       options.onError?.(new Error(`Worker exited with code ${exitCode}`));
@@ -58,6 +63,7 @@ export const enhancedWorker = <TMessage = unknown, TData = unknown>(
     _worker: worker,
     postMessage: (message: unknown) => worker?.postMessage(message),
     terminate: () => {
+      terminated = true;
       void worker?.terminate().finally(() => {
         worker = null;
       });
