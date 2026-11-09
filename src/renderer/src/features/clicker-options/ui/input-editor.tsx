@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { InfoIcon } from 'lucide-react';
 
 import { ipcActions } from '@/renderer/shared/api/ipc-client';
@@ -10,10 +11,12 @@ import { Toggle } from '@/renderer/shared/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
 
 import { isSupportedClickerInputCode } from '@/shared/clicker/input';
+import { findSharedKeys, getKeyConflictMessage } from '@/shared/clicker/key-conflict';
 import type { ClickerConfig } from '@/shared/clicker/types';
 import { recordedInputCodesToUiohookCodes, type RecordedInputCode } from '@/shared/hotkeys/dom';
 import { formatHotkeyKeys } from '@/shared/hotkeys/keys';
 
+import { useClickerConfig, useClickerHotkey } from '../model/use-clicker-keys';
 import { useKeyboardListener } from '../model/useKeyboardListener';
 
 const recordedCodesToClickerKeys = (codes: RecordedInputCode[]): number[] =>
@@ -22,10 +25,10 @@ const recordedCodesToClickerKeys = (codes: RecordedInputCode[]): number[] =>
 export const InputEditor = () => {
   const queryClient = useQueryClient();
 
-  const { data: config } = useQuery({
-    queryKey: ['clicker-config'],
-    queryFn: () => ipcActions.getClickerConfig(),
-  });
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+
+  const { data: config } = useClickerConfig();
+  const { data: startHotkey } = useClickerHotkey();
 
   const updateConfigMutation = useMutation({
     mutationFn: (update: Partial<ClickerConfig>) => {
@@ -47,13 +50,25 @@ export const InputEditor = () => {
     onRecord: (recordedCodes) => {
       const keys = recordedCodesToClickerKeys(recordedCodes);
 
-      if (keys.length === 0) {
+      if (keys.length === 0 || !startHotkey) {
+        return;
+      }
+
+      const sharedKeys = findSharedKeys(startHotkey.keys, keys);
+
+      if (sharedKeys.length > 0) {
+        setConflictMessage(getKeyConflictMessage(sharedKeys));
         return;
       }
 
       updateConfigMutation.mutate({ keys });
     },
   });
+
+  const startListening = () => {
+    setConflictMessage(null);
+    listen();
+  };
 
   const handleModeChange = (mode: ClickerConfig['mode']) => {
     updateConfigMutation.mutate({ mode });
@@ -99,7 +114,8 @@ export const InputEditor = () => {
           <Button
             ref={cancelButtonRef}
             variant="outline"
-            onClick={() => (isListening ? stop() : listen())}
+            disabled={!config || !startHotkey}
+            onClick={() => (isListening ? stop() : startListening())}
           >
             {isListening ? 'Cancel' : 'Edit'}
           </Button>
@@ -124,6 +140,8 @@ export const InputEditor = () => {
           </Toggle>
         </ButtonGroup>
       </div>
+
+      {conflictMessage && <p className="text-destructive text-xs">{conflictMessage}</p>}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { InfoIcon } from 'lucide-react';
 
 import { ipcActions } from '@/renderer/shared/api/ipc-client';
@@ -9,19 +10,20 @@ import { Separator } from '@/renderer/shared/ui/separator';
 import { Toggle } from '@/renderer/shared/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/shared/ui/tooltip';
 
+import { findSharedKeys, getKeyConflictMessage } from '@/shared/clicker/key-conflict';
 import { recordedInputCodesToUiohookCodes } from '@/shared/hotkeys/dom';
 import { formatHotkeyKeys } from '@/shared/hotkeys/keys';
 
+import { useClickerConfig, useClickerHotkey } from '../model/use-clicker-keys';
 import { useKeyboardListener } from '../model/useKeyboardListener';
 
 export const HotkeyEditor = () => {
   const queryClient = useQueryClient();
 
-  const { data: startHotkey } = useQuery({
-    queryKey: ['hotkeys', 'clicker-toggle'],
-    queryFn: () => ipcActions.getHotkeys(),
-    select: (data) => data.find((hotkey) => hotkey.name === 'clicker-start'),
-  });
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+
+  const { data: startHotkey } = useClickerHotkey();
+  const { data: clickerConfig } = useClickerConfig();
 
   const updateHotkeyMutation = useMutation({
     mutationFn: (update: { keys?: number[]; mode?: 'toggle' | 'hold' }) => {
@@ -44,13 +46,25 @@ export const HotkeyEditor = () => {
     onRecord: (recordedCodes) => {
       const keys = recordedInputCodesToUiohookCodes(recordedCodes);
 
-      if (keys.length === 0) {
+      if (keys.length === 0 || !clickerConfig) {
+        return;
+      }
+
+      const sharedKeys = findSharedKeys(keys, clickerConfig.keys);
+
+      if (sharedKeys.length > 0) {
+        setConflictMessage(getKeyConflictMessage(sharedKeys));
         return;
       }
 
       updateHotkeyMutation.mutate({ keys });
     },
   });
+
+  const startListening = () => {
+    setConflictMessage(null);
+    listen();
+  };
 
   const handleModeChange = (mode: 'toggle' | 'hold') => {
     updateHotkeyMutation.mutate({ mode });
@@ -99,7 +113,8 @@ export const HotkeyEditor = () => {
           <Button
             ref={cancelButtonRef}
             variant="outline"
-            onClick={() => (isListening ? stop() : listen())}
+            disabled={!startHotkey || !clickerConfig}
+            onClick={() => (isListening ? stop() : startListening())}
           >
             {isListening ? 'Cancel' : 'Edit'}
           </Button>
@@ -124,6 +139,8 @@ export const HotkeyEditor = () => {
           </Toggle>
         </ButtonGroup>
       </div>
+
+      {conflictMessage && <p className="text-destructive text-xs">{conflictMessage}</p>}
     </div>
   );
 };

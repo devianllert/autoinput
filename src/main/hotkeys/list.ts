@@ -1,3 +1,5 @@
+import { CLICKER_HOTKEY_NAME } from '@/shared/clicker/key-conflict';
+
 import { getClickerTiming } from '../clicker/store';
 import { autoClicker } from '../clicker/worker-runner';
 import { HotkeyRegistration, qKeys } from '../lib/hotkeys/hotkeys';
@@ -16,7 +18,7 @@ export const defaultHotkeyList = [
     mode: 'press',
   },
   {
-    name: 'clicker-start' as const,
+    name: CLICKER_HOTKEY_NAME,
     keys: [qKeys.Alt, qKeys.E],
     onPress: () => autoClicker.start(getClickerTiming().cps),
     onRelease: () => autoClicker.stop(),
