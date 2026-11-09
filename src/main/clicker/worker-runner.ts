@@ -3,6 +3,7 @@ import type { WindowTargetConfig } from '@/shared/window-target/types';
 import { getHandlers } from '../ipc/listeners';
 import { enhancedWorker } from '../lib/enhanced-worker';
 import { PowerSaveBlocker } from '../lib/power-save-blocker';
+import { taskbarStatus } from '../lib/taskbar-status';
 import { disableHighResolutionTimer, enableHighResolutionTimer } from '../lib/timer-resolution';
 import { findMainWindow } from '../windows/main';
 import { getClickerConfig, getWindowTargetConfig } from './store';
@@ -12,8 +13,10 @@ import clickerWorker from './worker?nodeWorker';
 
 type ClickerWorker = ReturnType<typeof enhancedWorker>;
 
-const notifyRenderer = (isRunning: boolean): void => {
+const publishRunState = (isRunning: boolean): void => {
   const window = findMainWindow();
+
+  taskbarStatus.setRunning(isRunning, window);
 
   if (!window) {
     return;
@@ -50,7 +53,7 @@ export class ClickerRunner {
     }
 
     this.isRunning = true;
-    notifyRenderer(true);
+    publishRunState(true);
     this.powerSaveBlocker.start();
     this.windowTargetGuard.start({
       onTargetMismatch: () => {
@@ -90,7 +93,7 @@ export class ClickerRunner {
     this.windowTargetGuard.stop();
     disableHighResolutionTimer();
     this.powerSaveBlocker.stop();
-    notifyRenderer(false);
+    publishRunState(false);
     // The worker is already gone when this runs because it crashed.
     this.worker?.postMessage({ type: 'stop' } satisfies ClickerWorkerMessage);
   }

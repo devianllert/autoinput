@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 
+import { taskbarStatus } from '../lib/taskbar-status';
 import { createWindow } from '../lib/window';
 
 let mainWindow: BrowserWindow | null = null;
@@ -21,6 +22,9 @@ export const createMainWindow = (): BrowserWindow => {
     resizable: true,
     showAfterReady: true,
   });
+
+  // A window recreated from the tray while the clicker runs must show the indicator too.
+  taskbarStatus.apply(mainWindow);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
